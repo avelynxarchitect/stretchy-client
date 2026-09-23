@@ -7,7 +7,7 @@
 const DEMO_DATASETS = {
   products: [
     { id: 'prod-001', name: 'Acoustic Pro Wireless Noise-Cancelling Headphones', category: 'electronics', price: 249.99, rating: 4.8, latency_ms: 12, sales_velocity: 840, description: 'Premium over-ear wireless headphones with active noise cancellation, transparency mode, and 40-hour battery life.' },
-    { id: 'prod-002', name: 'UltraSlim Mechanical Gaming Keyboard RGB', category: 'electronics', price: 129.50, rating: 4.6, latency_ms: 8, sales_velocity: 512, description: 'Hot-swappable low profile mechanical switches with per-key RGB backlighting and low-latency wireless 5.2.' },
+    { id: 'prod-002', name: 'UltraSlim Mechanical Gaming Keyboard RGB', category: 'electronics', price: 129.50, rating: 4.6, latency_ms: 8, sales_velocity: 512, description: 'Hot-swappable low profile mechanical switches with per-key RGB backlighting and Bluetooth 5.2.' },
     { id: 'prod-003', name: 'Ergonomic Mesh Office Chair with Lumbar Support', category: 'furniture', price: 349.00, rating: 4.7, latency_ms: 45, sales_velocity: 230, description: 'Breathable mesh executive office chair with adjustable 3D armrests and dynamic spinal alignment.' },
     { id: 'prod-004', name: 'Smart 4K Ultra HD Streaming Cinema Projector', category: 'electronics', price: 899.00, rating: 4.5, latency_ms: 28, sales_velocity: 120, description: 'Laser optical engine with 3000 ANSI lumens, HDR10+, autofocus, and built-in edge streaming apps.' },
     { id: 'prod-005', name: 'Stainless Steel Insulated Thermal Travel Mug 24oz', category: 'home', price: 34.95, rating: 4.9, latency_ms: 5, sales_velocity: 1450, description: 'Double-wall vacuum insulation keeps liquids icy cold for 24h or piping hot for 12h without condensation.' },
