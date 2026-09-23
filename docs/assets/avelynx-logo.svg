@@ -1,34 +1,93 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 56" width="260" height="56" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
   <defs>
-    <linearGradient id="avelynx_grad_primary" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#06B6D4" />
-      <stop offset="50%" stop-color="#6366F1" />
-      <stop offset="100%" stop-color="#A855F7" />
+    <!-- Metallic Silver Gradients -->
+    <linearGradient id="metalLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#e2e8f0"/>
+      <stop offset="70%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#64748b"/>
     </linearGradient>
-    <linearGradient id="avelynx_grad_glow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.8" />
-      <stop offset="100%" stop-color="#818CF8" stop-opacity="0.2" />
+    
+    <linearGradient id="metalRight" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#cbd5e1"/>
+      <stop offset="75%" stop-color="#64748b"/>
+      <stop offset="100%" stop-color="#334155"/>
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="3" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+
+    <!-- Crimson Slash Gradient -->
+    <linearGradient id="crimsonEye" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#b91c1c"/>
+      <stop offset="25%" stop-color="#dc2626"/>
+      <stop offset="60%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#f87171"/>
+    </linearGradient>
+
+    <radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7f1d1d"/>
+      <stop offset="70%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </radialGradient>
+
+    <!-- Bevel Shadows -->
+    <filter id="subtleGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#dc2626" flood-opacity="0.35"/>
     </filter>
   </defs>
 
-  <!-- Stylized Geometric Lynx/Chevron Brandmark -->
-  <g transform="translate(6, 4)">
-    <path d="M24 2 L44 24 L36 32 L24 20 L12 32 L4 24 Z" fill="url(#avelynx_grad_glow)" opacity="0.4" filter="url(#glow)" />
-    <path d="M4 22 L24 2 L30 8 L14 24 Z" fill="url(#avelynx_grad_primary)" />
-    <path d="M44 22 L24 2 L18 8 L34 24 Z" fill="#818CF8" />
-    <polygon points="24,10 32,24 24,34 16,24" fill="url(#avelynx_grad_primary)" />
-    <path d="M10 28 L24 42 L28 38 L16 26 Z" fill="#06B6D4" opacity="0.9" />
-    <path d="M38 28 L24 42 L20 38 L32 26 Z" fill="#A855F7" opacity="0.9" />
-    <polygon points="24,36 27,40 24,44 21,40" fill="#38BDF8" />
-  </g>
+  <!-- Left Leg of the 'A' -->
+  <path d="M 250,45 L 210,45 L 60,370 L 140,370 L 225,185 L 250,130 Z" 
+        fill="url(#metalLeft)" />
 
-  <!-- Typography -->
-  <g transform="translate(62, 0)">
-    <text x="0" y="32" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Outfit', 'Inter', sans-serif" font-size="24" font-weight="800" fill="#FFFFFF" letter-spacing="0.12em">AVELYNX</text>
-    <text x="1" y="46" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif" font-size="9" font-weight="700" fill="#94A3B8" letter-spacing="0.28em">ENTERPRISE IAM &amp; LAUNCHPAD</text>
-  </g>
+  <!-- Right Leg of the 'A' (Lower segment below slash) -->
+  <path d="M 335,270 L 385,370 L 305,370 L 275,310 Z" 
+        fill="url(#metalRight)" />
+
+  <!-- Right Leg of the 'A' (Upper segment above slash) -->
+  <path d="M 250,45 L 280,45 L 360,205 L 300,185 L 250,90 Z" 
+        fill="url(#metalRight)" />
+
+  <!-- Center Peak Bevel / Ridge -->
+  <polygon points="250,45 258,60 250,130 242,60" fill="#ffffff" opacity="0.6" />
+
+  <!-- THE CRIMSON LYNX EYE / SUPERSONIC SLASH -->
+  <!-- Outer Aerodynamic Crimson Blade piercing through right leg -->
+  <path d="M 125,320 
+           C 160,285 200,240 245,215 
+           C 285,190 380,145 470,110 
+           C 410,155 350,210 300,255 
+           C 255,295 205,330 165,340 
+           C 145,345 130,335 125,320 Z" 
+        fill="url(#crimsonEye)" 
+        filter="url(#subtleGlow)" />
+
+  <!-- Upper Eyelid / Blade Edge Highlight -->
+  <path d="M 125,320 
+           C 170,280 230,230 300,190 
+           C 365,155 420,130 470,110 
+           C 415,140 350,180 290,215 
+           C 220,260 165,300 125,320 Z" 
+        fill="#fca5a5" opacity="0.75" />
+
+  <!-- Inner Dark Eye Socket -->
+  <path d="M 195,290 
+           C 225,255 260,235 295,225 
+           C 275,255 240,280 205,295 
+           C 200,295 197,293 195,290 Z" 
+        fill="#0f172a" />
+
+  <!-- Crimson Lynx Iris & Pupil -->
+  <ellipse cx="248" cy="260" rx="18" ry="14" 
+           transform="rotate(-22 248 260)" 
+           fill="url(#pupilGlow)" />
+  
+  <ellipse cx="248" cy="260" rx="7" ry="12" 
+           transform="rotate(-15 248 260)" 
+           fill="#050505" />
+
+  <!-- Eye Light Catch / Glint -->
+  <circle cx="244" cy="255" r="3.5" fill="#ffffff" opacity="0.9" />
+
+  <!-- Bottom Slash Accent Wing -->
+  <path d="M 148,348 C 175,330 205,305 235,285 C 215,305 185,330 160,345 Z" fill="#991b1b" />
 </svg>
