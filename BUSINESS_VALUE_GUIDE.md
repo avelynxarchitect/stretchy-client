@@ -53,29 +53,31 @@ Stretchy was designed around one principle: **Enterprise power with consumer sim
 
 Stretchy acts as your company's **central intelligence engine**. Here is what it delivers in day-to-day operations:
 
-`
-  ┌────────────────────────────────────────────────────────────────────────┐
-  │                        AVELYNX STRETCHY CORE                           │
-  ├────────────────────────────────────────────────────────────────────────┤
-  │                                                                        │
-  │   1. INSTANT ENTERPRISE SEARCH                                         │
-  │      • Sub-15ms full-text keyword & fuzzy matching                     │
-  │      • Searches across customer records, support tickets & documents   │
-  │                                                                        │
-  │   2. PROBABILISTIC ANOMALY DETECTION                                   │
-  │      • Real-time statistical profiling (Mean, StdDev, IQR)             │
-  │      • Flags suspicious transactions, billing spikes & unusual leaks   │
-  │                                                                        │
-  │   3. DYNAMIC QUERY SLICER & BUSINESS GAUGES                            │
-  │      • Real-time interactive slicing: "Matched X of Y (Z%)"            │
-  │      • Instant visual breakdowns for revenue, inventory & triage       │
-  │                                                                        │
-  │   4. ZERO-CLUSTER SECURE EDGE INFRASTRUCTURE                           │
-  │      • Hosted across 300+ cities worldwide on Cloudflare Edge          │
-  │      • AES-256-GCM encryption & HMAC-SHA256 multi-tenant isolation     │
-  │                                                                        │
-  └────────────────────────────────────────────────────────────────────────┘
-`
+```mermaid
+graph TD
+    classDef core fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#ffffff;
+    classDef feature fill:#0f172a,stroke:#38bdf8,stroke-width:1px,color:#e2e8f0;
+
+    CORE["AveLynx Stretchy™ Core Engine"]:::core
+
+    F1["🔍 1. Instant Enterprise Search<br/>• Sub-15ms BM25 full-text & fuzzy matching<br/>• Searches records, support tickets & documents"]:::feature
+    F2["⚡ 2. Probabilistic Anomaly Detection<br/>• Real-time statistical profiling (Mean, StdDev, IQR)<br/>• Flags suspicious spikes & outlier transactions"]:::feature
+    F3["📊 3. Dynamic Query Slicer & Gauges<br/>• Real-time interactive slicing: Matched X of Y<br/>• Instant visual breakdowns for revenue & inventory"]:::feature
+    F4["🛡️ 4. Zero-Cluster Secure Edge Infrastructure<br/>• Hosted across 300+ cities on Cloudflare Edge<br/>• AES-256-GCM encryption & tenant isolation"]:::feature
+
+    CORE --> F1
+    CORE --> F2
+    CORE --> F3
+    CORE --> F4
+```
+
+| Core Pillar | Operational Capability | Business Value Delivered |
+| :--- | :--- | :--- |
+| **1. Instant Enterprise Search** | Sub-15ms BM25 full-text & fuzzy matching across structured data and unstructured documents (PDF, Word, Excel). | Employees stop digging through folders; search queries resolve in milliseconds. |
+| **2. Probabilistic Anomaly Detection** | Real-time statistical profiling (Mean, StdDev, IQR) evaluating transaction sizes, traffic bursts, and operational metrics. | Catches billing spikes, data leaks, or rogue transactions before damage spreads. |
+| **3. Dynamic Query Slicer** | Interactive visual match breakdown (*"Matched X of Y (Z%)"*) calculated directly on the query response. | Management gains instant clarity on dataset segments without custom BI dashboards. |
+| **4. Zero-Cluster Edge Infrastructure** | Distributed across 300+ Cloudflare edge POPs with AES-256-GCM encryption and cryptographic tenant isolation. | Eliminates $500–$2,000/mo server cluster bills and removes 100% of JVM maintenance. |
+
 
 ### Key Business Capabilities:
 1. **Accelerates Customer-Facing Web & Mobile Apps**:
@@ -83,7 +85,7 @@ Stretchy acts as your company's **central intelligence engine**. Here is what it
 2. **Automates Regulatory & Legal Compliance Search**:
    Allows compliance officers and executives to search across historical tax filings (e.g., Form 8879s), grant awards, and contracts in seconds instead of filing IT support tickets.
 3. **Protects Revenue with Proactive Anomaly Detection**:
-   Monitors operational numbers (sales velocity, ticket arrival rates, refund requests, server latencies) and highlights statistical outliers exceeding .5\sigma$ before they become crises.
+   Monitors operational numbers (sales velocity, ticket arrival rates, refund requests, server latencies) and highlights statistical outliers exceeding 2.5 standard deviations (2.5σ) before they become crises.
 4. **Scales Globally Without Infrastructure Upgrades**:
    Whether your business processes 1,000 queries a month or 10,000,000 queries a day, Stretchy scales automatically on Cloudflare's global edge without provisioning extra servers.
 
