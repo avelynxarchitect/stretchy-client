@@ -143,20 +143,116 @@ body {
 .brand-link {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
   color: var(--text-primary);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.25rem;
+  user-select: none;
 }
-.brand-logo-img {
+
+/* AveLynx Clean Emblem (No blue square background) */
+.avelynx-emblem {
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
-  padding: 4px;
+  background: transparent;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+  flex-shrink: 0;
+  object-fit: contain;
 }
+.brand-link:hover .avelynx-emblem {
+  transform: scale(1.08) rotate(-4deg);
+  filter: drop-shadow(0 4px 10px rgba(220, 38, 38, 0.5));
+}
+
+.brand-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.avelynx-name {
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.brand-divider {
+  color: var(--border-accent);
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+/* Stretchy Elastic Brand Pill */
+.stretchy-elastic-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px 3px 7px;
+  background: rgba(99, 102, 241, 0.09);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: var(--radius-full);
+  cursor: grab;
+  position: relative;
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  transform-origin: left center;
+}
+.stretchy-elastic-pill:hover {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.25), 0 0 24px rgba(6, 182, 212, 0.15);
+}
+.stretchy-elastic-pill:active {
+  cursor: grabbing;
+}
+
+/* Stretchy Elastic Icon */
+.stretchy-emblem {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 2px 6px rgba(6, 182, 212, 0.45));
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center center;
+  flex-shrink: 0;
+}
+
+/* Elastic Typography */
+.stretchy-text-stretch {
+  background: linear-gradient(135deg, #818CF8 0%, #38BDF8 50%, #34D399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  display: inline-block;
+  transform-origin: left center;
+  transition: letter-spacing 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Hover Stretch */
+.stretchy-elastic-pill:hover .stretchy-text-stretch {
+  letter-spacing: 0.14em;
+  transform: scaleX(1.16) scaleY(0.94);
+}
+.stretchy-elastic-pill:hover .stretchy-emblem {
+  transform: scaleX(1.22) scaleY(0.88) rotate(8deg);
+}
+
+/* Rubber Band Snapping Effect */
+.stretchy-snapping {
+  animation: rubberBandSnap 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes rubberBandSnap {
+  0% { transform: scaleX(1.42) scaleY(0.72); }
+  25% { transform: scaleX(0.84) scaleY(1.2); }
+  45% { transform: scaleX(1.18) scaleY(0.92); }
+  65% { transform: scaleX(0.95) scaleY(1.05); }
+  82% { transform: scaleX(1.04) scaleY(0.98); }
+  100% { transform: scale(1, 1); }
+}
+
 .brand-tag {
   font-size: 0.75rem;
   background: var(--accent-indigo-glow);
@@ -165,7 +261,7 @@ body {
   padding: 2px 8px;
   border-radius: var(--radius-full);
   font-weight: 600;
-  margin-left: 6px;
+  margin-left: 4px;
 }
 
 .nav-links {

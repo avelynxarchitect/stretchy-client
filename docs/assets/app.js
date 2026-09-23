@@ -51,6 +51,7 @@ class AveLynxPlaygroundApp {
     this.initClient();
     this.initTheme();
     this.bindEvents();
+    this.initElasticStretch();
     this.runSearch();
   }
 
@@ -109,6 +110,59 @@ class AveLynxPlaygroundApp {
         ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>'
         : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
     }
+  }
+
+  initElasticStretch() {
+    const pill = document.getElementById('stretchyBrand');
+    const text = document.getElementById('stretchyText');
+    const emblem = document.getElementById('stretchyEmblem');
+    if (!pill || !text) return;
+
+    let isDragging = false;
+    let startX = 0;
+    let currentStretch = 1;
+
+    pill.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      pill.classList.remove('stretchy-snapping');
+      pill.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = Math.max(-20, e.clientX - startX);
+      currentStretch = 1 + Math.tanh(dx / 120) * 0.75;
+      const squash = 1 / Math.sqrt(currentStretch);
+      const letterSpace = (currentStretch - 1) * 0.45;
+
+      pill.style.transform = 'scaleX(' + currentStretch + ') scaleY(' + squash + ')';
+      text.style.letterSpacing = letterSpace + 'em';
+      if (emblem) emblem.style.transform = 'scaleX(' + (currentStretch * 1.1) + ') scaleY(' + (squash * 0.9) + ') rotate(' + (dx * 0.2) + 'deg)';
+    });
+
+    const endDrag = () => {
+      if (!isDragging) return;
+      isDragging = false;
+      pill.style.cursor = 'grab';
+      pill.style.transform = '';
+      text.style.letterSpacing = '';
+      if (emblem) emblem.style.transform = '';
+
+      pill.classList.remove('stretchy-snapping');
+      void pill.offsetWidth;
+      pill.classList.add('stretchy-snapping');
+    };
+
+    window.addEventListener('mouseup', endDrag);
+
+    pill.addEventListener('click', (e) => {
+      e.preventDefault();
+      pill.classList.remove('stretchy-snapping');
+      void pill.offsetWidth;
+      pill.classList.add('stretchy-snapping');
+    });
   }
 
   bindEvents() {
