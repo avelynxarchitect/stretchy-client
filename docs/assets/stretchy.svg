@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <!-- Stretchy Primary Elastic Gradient -->
+    <linearGradient id="stretchyGrad1" x1="10%" y1="10%" x2="90%" y2="90%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="35%" stop-color="#06B6D4" />
+      <stop offset="70%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+
+    <!-- Secondary Overlay Gradient -->
+    <linearGradient id="stretchyGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="45%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#34D399" />
+    </linearGradient>
+
+    <!-- Soft Glow Filter -->
+    <filter id="stretchyGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Icon Container (Dark Slate Rounded Rect) -->
+  <rect width="100" height="100" rx="24" fill="#0B0F19" />
+  <rect width="98" height="98" x="1" y="1" rx="23" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1.5" />
+
+  <!-- The Elastic "S" Ribbon + Search Lens Loop -->
+  <g filter="url(#stretchyGlow)">
+    <!-- Lower Loop (Amber -> Emerald) -->
+    <path d="M50 50 C36 64 24 74 34 84 C44 94 62 88 66 74 C70 60 52 52 50 50 Z" 
+          fill="none" stroke="url(#stretchyGrad1)" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Upper Main "S" Curve (Indigo -> Cyan -> Emerald) -->
+    <path d="M32 30 C32 18 48 14 58 20 C68 26 66 38 52 48 C42 55 30 64 36 76" 
+          fill="none" stroke="url(#stretchyGrad2)" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Integrated Search Lens Loop (Stretching out of the upper curve) -->
+    <circle cx="67" cy="33" r="11" fill="none" stroke="url(#stretchyGrad1)" stroke-width="7" />
+    <!-- Lens Handle / Dynamic Tangent -->
+    <line x1="75" y1="41" x2="84" y2="50" stroke="#10B981" stroke-width="7" stroke-linecap="round" />
+  </g>
+</svg>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AveLynx Stretchy | Edge-Native Lucene & Elastic Alternative with Probabilistic Anomaly Detection</title>
+  <meta name="description" content="Official TypeScript/JavaScript Client & Live Playground for Stretchy - The Edge-Native Lucene & Elastic Alternative with real-time probabilistic anomaly detection and dynamic query slicing.">
+  <meta name="keywords" content="stretchy, avelynx, search engine, lucene, elasticsearch alternative, bm25, cloudflare workers, full text search, anomaly detection, edge search">
+  <meta property="og:title" content="AveLynx Stretchy - The Edge-Native Lucene Alternative">
+  <meta property="og:description" content="Sub-15ms BM25 full-text search with zero cluster tax and real-time statistical anomaly detection.">
+  <meta property="og:image" content="assets/stretchy.png">
+  <meta property="og:type" content="website">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/stretchy.svg">
+  <link rel="apple-touch-icon" href="assets/stretchy.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/styles.css">
+
+  <!-- Stretchy Client UMD Bundle -->
+  <script src="assets/stretchy.umd.js"></script>
+</head>
+<body>
+
+  <!-- Ambient Glow Background -->
+  <div class="bg-ambient">
+    <div class="ambient-glow-1"></div>
+    <div class="ambient-glow-2"></div>
+  </div>
+
+  <!-- Navigation -->
+  <header class="navbar">
+    <div class="container nav-content">
+      <a href="#" class="brand-link">
+        <img src="assets/avelynx-logo.svg" alt="AveLynx Logo" class="brand-logo-img">
+        <span>AveLynx <span style="color: var(--accent-indigo)">Stretchy</span></span>
+        <span class="brand-tag">v1.0.0</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#playground" class="nav-link">Playground</a>
+        <a href="#downloads" class="nav-link">SDK Downloads</a>
+        <a href="#api" class="nav-link">API Reference</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="https://github.com/ksankstemp-dotcom/stretchy-client" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Theme">
+          <span id="themeIcon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
+            </svg>
+          </span>
+        </button>
+        <a href="#playground" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.85rem;">Try Live</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        <span>Cloudflare 300+ Edge POPs &bull; Zero Cluster Tax &bull; Probabilistic Anomaly Detection</span>
+      </div>
+
+      <h1 class="hero-title">
+        The Edge-Native Lucene &amp; Elastic Alternative
+        <br>
+        <span class="hero-title-gradient">Built for Extreme Scale &amp; Real-Time Insights</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Engineered for full-text BM25 search precision without the $500/month cluster tax or JVM pauses.
+        Run native queries on Cloudflare's Global Edge with built-in real-time Z-score anomaly detection and dynamic query slicing.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="#playground" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Launch Live Playground
+        </a>
+        <a href="#downloads" class="btn btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download SDK (v1.0.0)
+        </a>
+        <a href="https://github.com/ksankstemp-dotcom/stretchy-client" target="_blank" rel="noopener" class="btn btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          GitHub Repository
+        </a>
+      </div>
+
+      <!-- Quick Install Box -->
+      <div class="install-box">
+        <div class="install-tabs">
+          <button class="tab-btn active" data-tab="npm">npm</button>
+          <button class="tab-btn" data-tab="yarn">yarn</button>
+          <button class="tab-btn" data-tab="pnpm">pnpm</button>
+          <button class="tab-btn" data-tab="cdn">cdn</button>
+          <button class="tab-btn" data-tab="pip">pip</button>
+        </div>
+        <div id="installCommand" class="install-command">npm install @avelynx/stretchy</div>
+        <button class="copy-btn copy-trigger" aria-label="Copy Install Command">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Playground Section -->
+  <section id="playground" class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Interactive Client Demo</div>
+        <h2 class="section-title">Live Stretchy Client Playground</h2>
+        <p class="section-desc">
+          Test real-time Lucene &amp; BM25 queries, explore the visual query slicer, and watch probabilistic anomaly detection flag statistical outliers on the fly.
+        </p>
+      </div>
+
+      <div class="playground-card">
+        <!-- Toolbar -->
+        <div class="playground-toolbar">
+          <div class="playground-source-selector">
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary)">Backend:</span>
+            <select id="sourceSelect" class="select-input">
+              <option value="mock" selected>In-Memory Mock Sandbox (Instant, Zero Setup)</option>
+              <option value="live">Live Edge Worker (https://search.avelynx.net)</option>
+            </select>
+
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-left: 8px;">Dataset:</span>
+            <select id="datasetSelect" class="select-input">
+              <option value="products" selected>E-Commerce Products (12 items)</option>
+              <option value="soc_logs">Cybersecurity SOC Telemetry (8 logs)</option>
+              <option value="grants">Grant &amp; Tax Documents (4 items)</option>
+            </select>
+          </div>
+
+          <div style="font-size: 0.825rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+            <span class="pulse-dot" style="background: var(--accent-emerald);"></span>
+            <span>SDK v1.0.0 Active</span>
+          </div>
+        </div>
+
+        <!-- Query Input Bar -->
+        <div class="playground-query-bar">
+          <div class="query-input-wrapper">
+            <svg class="query-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="queryInput" class="query-input" placeholder="Type a search query (e.g. 'wireless', 'audio', 'anomaly', 'grant', or '*' for all)..." value="*">
+          </div>
+          <button id="searchBtn" class="btn btn-primary" style="padding: 14px 24px;">Execute</button>
+        </div>
+
+        <!-- Query Slicer Dynamic Gauge -->
+        <div class="slicer-panel">
+          <div class="slicer-header">
+            <span id="slicerLabel" class="slicer-label">Slice: 100% of Dataset</span>
+            <span id="slicerStats" class="slicer-stats">12 / 12 documents</span>
+          </div>
+          <div class="slicer-track">
+            <div id="slicerFill" class="slicer-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <!-- Probabilistic Anomaly Detector Widget -->
+        <div class="anomaly-widget">
+          <div class="anomaly-header">
+            <div class="anomaly-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-indigo)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <span>Probabilistic Statistical Profiling Engine</span>
+            </div>
+            <div id="anomalyPill" class="anomaly-pill clean">Normal Distribution</div>
+          </div>
+
+          <div class="stat-chips-grid">
+            <div class="stat-chip">
+              <div class="stat-chip-label">Mean (&mu;)</div>
+              <div id="statMean" class="stat-chip-value">--</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-chip-label">StdDev (&sigma;)</div>
+              <div id="statStdDev" class="stat-chip-value">--</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-chip-label">Median (p50)</div>
+              <div id="statMedian" class="stat-chip-value">--</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-chip-label">IQR (Q3-Q1)</div>
+              <div id="statIQR" class="stat-chip-value">--</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-chip-label">Outliers (z &ge; 2.2)</div>
+              <div id="statOutliers" class="stat-chip-value" style="color: var(--accent-rose)">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Grid & Code Panel -->
+        <div class="playground-body">
+          <div class="results-pane">
+            <div class="results-header">
+              <span id="resultsCountLabel">0 results matched</span>
+              <span>Sorted by BM25 Relevance</span>
+            </div>
+            <div id="resultsContainer">
+              <!-- Dynamically populated by app.js -->
+            </div>
+          </div>
+
+          <div class="code-pane">
+            <div class="code-header">
+              <span class="code-title">Generated Client SDK Code</span>
+              <button class="copy-btn copy-trigger" data-copy="" style="font-size: 0.75rem; padding: 4px 8px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy Code
+              </button>
+            </div>
+            <pre class="code-pre"><code id="codeSnippet">// Loading Stretchy Client...</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SDK Downloads Section -->
+  <section id="downloads" class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Client SDK Bundles</div>
+        <h2 class="section-title">Accessible Everywhere</h2>
+        <p class="section-desc">
+          Zero external runtime dependencies. Choose between modern ES modules, universal browser UMD bundles, or production-minified CDN assets.
+        </p>
+      </div>
+
+      <div class="download-grid">
+        <!-- UMD Card -->
+        <div class="download-card">
+          <div class="download-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+          <h3 class="download-title">Universal UMD Bundle</h3>
+          <p class="download-desc">
+            Perfect for direct browser <code>&lt;script&gt;</code> tags, CommonJS (Node.js), and legacy bundlers. Exposes <code>window.StretchyClient</code>.
+          </p>
+          <a href="assets/stretchy.umd.js" download="stretchy.umd.js" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-bottom: 12px;">
+            Download stretchy.umd.js (21 KB)
+          </a>
+          <div class="download-meta">
+            <span>Format: Universal Module</span>
+            <span>Version: 1.0.0</span>
+          </div>
+        </div>
+
+        <!-- ESM Card -->
+        <div class="download-card" style="border-color: var(--border-accent)">
+          <div class="download-icon" style="background: var(--accent-cyan-glow); color: var(--accent-cyan)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <h3 class="download-title">Modern ES Module</h3>
+          <p class="download-desc">
+            Tree-shakeable native ESM export. Designed for Vite, Next.js, Rollup, Webpack 5, and modern browser <code>&lt;script type="module"&gt;</code>.
+          </p>
+          <a href="assets/stretchy.esm.js" download="stretchy.esm.js" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 12px;">
+            Download stretchy.esm.js (21 KB)
+          </a>
+          <div class="download-meta">
+            <span>Format: ES2022 Module</span>
+            <span>Target: Modern Web</span>
+          </div>
+        </div>
+
+        <!-- Minified Card -->
+        <div class="download-card">
+          <div class="download-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>
+          <h3 class="download-title">Production Minified</h3>
+          <p class="download-desc">
+            Ultra-compact production build stripped of extraneous whitespace and comments. Ready for high-volume CDN edge delivery.
+          </p>
+          <a href="assets/stretchy.min.js" download="stretchy.min.js" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-bottom: 12px;">
+            Download stretchy.min.js (17 KB)
+          </a>
+          <div class="download-meta">
+            <span>Format: Minified UMD</span>
+            <span>Size: ~17 KB Raw</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CDN Copy Box -->
+      <div style="margin-top: 36px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">Direct CDN Link (jsDelivr / unpkg)</div>
+          <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-cyan); word-break: break-all;">
+            &lt;script src="https://client.avelynx.net/assets/stretchy.min.js"&gt;&lt;/script&gt;
+          </div>
+        </div>
+        <button class="btn btn-secondary copy-trigger" data-copy="<script src=&quot;https://client.avelynx.net/assets/stretchy.min.js&quot;></script>">
+          Copy CDN Tag
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive API Reference Section -->
+  <section id="api" class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Developer Reference</div>
+        <h2 class="section-title">Core Client API</h2>
+        <p class="section-desc">
+          Clean, promise-based TypeScript methods with intelligent defaults and automated multi-tenant isolation.
+        </p>
+      </div>
+
+      <div class="api-grid">
+        <!-- Method 1 -->
+        <div class="api-item">
+          <div class="api-sig">new StretchyClient({ baseUrl?, licenseKey?, apiKey? })</div>
+          <div class="api-desc">Initializes a new Stretchy client. Defaults to <code>https://search.avelynx.net</code>.</div>
+          <div class="api-code-snippet">const client = new StretchyClient({ baseUrl: 'https://search.avelynx.net' });</div>
+        </div>
+
+        <!-- Method 2 -->
+        <div class="api-item">
+          <div class="api-sig">client.search(indexName, options)</div>
+          <div class="api-desc">Performs full-text search with Lucene matching, BM25 scoring, fuzzy term expansion, and faceted aggregation.</div>
+          <div class="api-code-snippet">const res = await client.search('products', { query: 'wireless', limit: 20, fuzzy: true });</div>
+        </div>
+
+        <!-- Method 3 -->
+        <div class="api-item">
+          <div class="api-sig">client.detectAnomalies(data, fieldOrOptions)</div>
+          <div class="api-desc">Statistical profiling engine that calculates Mean, StdDev, IQR, and flags outliers exceeding Z-score or Tukey fences.</div>
+          <div class="api-code-snippet">const report = client.detectAnomalies(res.hits, { field: 'price', zThreshold: 2.5 });</div>
+        </div>
+
+        <!-- Method 4 -->
+        <div class="api-item">
+          <div class="api-sig">client.querySlicer(matchedCount, totalCount)</div>
+          <div class="api-desc">Computes slice ratios, match percentages, and returns formatted visual gauge objects for UI dashboards.</div>
+          <div class="api-code-snippet">const slice = client.querySlicer(res.hits.length, res.total); // => { percent: 16.8, label: "42 of 250 matched (16.8%)" }</div>
+        </div>
+
+        <!-- Method 5 -->
+        <div class="api-item">
+          <div class="api-sig">client.indexDocs(indexName, docs)</div>
+          <div class="api-desc">Ingests a single document or batch of JSON records. Auto-creates index schema and dual-indexes text and range fields.</div>
+          <div class="api-code-snippet">await client.indexDocs('products', [{ id: 'sku-1', name: 'Product Name', price: 99.99 }]);</div>
+        </div>
+
+        <!-- Method 6 -->
+        <div class="api-item">
+          <div class="api-sig">client.createTrialLicense(companyName, email, tenantId?)</div>
+          <div class="api-desc">Generates an authentic cryptographic 14-day evaluation license key directly from the edge.</div>
+          <div class="api-code-snippet">const trial = await client.createTrialLicense('Acme Corp', 'dev@acme.com');</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Comparison Section -->
+  <section id="features" class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Architecture Comparison</div>
+        <h2 class="section-title">Why Stretchy vs. Legacy Clusters</h2>
+        <p class="section-desc">
+          Compare the operational and cost profiles of Stretchy against traditional Elasticsearch and Splunk setups.
+        </p>
+      </div>
+
+      <div style="overflow-x: auto; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 8px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+              <th style="padding: 16px 20px;">Feature</th>
+              <th style="padding: 16px 20px;">Elasticsearch / OpenSearch</th>
+              <th style="padding: 16px 20px; color: var(--accent-indigo); font-weight: 700;">AveLynx Stretchy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 16px 20px; font-weight: 600;">Monthly Cluster Tax</td>
+              <td style="padding: 16px 20px; color: var(--accent-rose);">$200 &ndash; $1,200+/mo (idle nodes)</td>
+              <td style="padding: 16px 20px; color: var(--accent-emerald); font-weight: 700;">Near $0 at rest (Pennies / M queries)</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 16px 20px; font-weight: 600;">Cold Start &amp; Latency</td>
+              <td style="padding: 16px 20px; color: var(--text-secondary);">150ms+ regional roundtrips, GC pauses</td>
+              <td style="padding: 16px 20px; color: var(--accent-emerald); font-weight: 700;">Sub-15ms worldwide (300+ Edge POPs)</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 16px 20px; font-weight: 600;">Anomaly Detection</td>
+              <td style="padding: 16px 20px; color: var(--text-secondary);">Requires heavy external ML daemon</td>
+              <td style="padding: 16px 20px; color: var(--accent-emerald); font-weight: 700;">Built-in real-time Z-scores &amp; IQR cuts</td>
+            </tr>
+            <tr>
+              <td style="padding: 16px 20px; font-weight: 600;">Client Footprint</td>
+              <td style="padding: 16px 20px; color: var(--text-secondary);">Heavy 50MB+ SDKs</td>
+              <td style="padding: 16px 20px; color: var(--accent-emerald); font-weight: 700;">Zero-dependency ~17KB minified bundle</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="assets/avelynx-logo.svg" alt="AveLynx Logo" style="width: 28px; height: 28px;">
+            <span style="font-family: var(--font-display); font-weight: 700; font-size: 1.15rem;">AveLynx Ecosystem</span>
+          </div>
+          <p class="footer-brand-desc">
+            Empowering modern distributed systems with edge-native intelligence, cryptographic data isolation, and high-performance search.
+          </p>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Ecosystem</div>
+          <ul class="footer-links">
+            <li><a href="https://portal.avelynx.net" class="footer-link">IAM Portal</a></li>
+            <li><a href="https://search.avelynx.net" class="footer-link">Stretchy Search</a></li>
+            <li><a href="https://appmanagement.avelynx.net" class="footer-link">App Management</a></li>
+            <li><a href="https://community.avelynx.net" class="footer-link">Community Forum</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Resources</div>
+          <ul class="footer-links">
+            <li><a href="#playground" class="footer-link">Live Playground</a></li>
+            <li><a href="#downloads" class="footer-link">SDK Downloads</a></li>
+            <li><a href="#api" class="footer-link">API Documentation</a></li>
+            <li><a href="https://github.com/ksankstemp-dotcom/stretchy-client" class="footer-link">GitHub Source</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Legal &amp; Security</div>
+          <ul class="footer-links">
+            <li><a href="#" class="footer-link">Apache-2.0 License</a></li>
+            <li><a href="#" class="footer-link">Privacy Policy</a></li>
+            <li><a href="#" class="footer-link">Security Disclosures</a></li>
+            <li><a href="#" class="footer-link">Contact Engineering</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 AveLynx (MYZBROS ENTERPRISES LLC). All rights reserved.</div>
+        <div style="display: flex; gap: 16px;">
+          <span>Stretchy Client v1.0.0</span>
+          <span>&bull;</span>
+          <span>Hosted on GitHub Pages</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script src="assets/app.js"></script>
+</body>
+</html>

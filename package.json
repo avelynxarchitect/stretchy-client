@@ -1,0 +1,52 @@
+﻿{
+  "name": "@avelynx/stretchy",
+  "version": "1.0.0",
+  "description": "Official TypeScript/JavaScript Client for Stretchy - The Edge-Native Lucene & Elastic Alternative with Probabilistic Anomaly Detection.",
+  "main": "dist/stretchy.umd.js",
+  "module": "dist/stretchy.esm.js",
+  "unpkg": "dist/stretchy.umd.js",
+  "jsdelivr": "dist/stretchy.umd.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/stretchy.esm.js",
+      "require": "./dist/stretchy.umd.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./dist/stretchy.umd.js": "./dist/stretchy.umd.js",
+    "./dist/stretchy.esm.js": "./dist/stretchy.esm.js",
+    "./dist/stretchy.min.js": "./dist/stretchy.min.js"
+  },
+  "scripts": {
+    "build": "node scripts/build-client.mjs",
+    "test": "node examples/quickstart.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "search",
+    "elasticsearch",
+    "lucene",
+    "bm25",
+    "full-text-search",
+    "anomaly-detection",
+    "cloudflare-workers",
+    "edge-search",
+    "database",
+    "telemetry",
+    "avelynx"
+  ],
+  "author": "AveLynx (MYZBROS ENTERPRISES LLC)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ksankstemp-dotcom/stretchy-client.git"
+  },
+  "bugs": {
+    "url": "https://community.avelynx.net"
+  },
+  "homepage": "https://client.avelynx.net",
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
