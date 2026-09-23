@@ -1,7 +1,7 @@
 {
   "name": "@avelynx/stretchy",
   "version": "1.0.0",
-  "description": "Official TypeScript/JavaScript Client for Stretchy - The Edge-Native Lucene & Elastic Alternative with Probabilistic Anomaly Detection.",
+  "description": "Official TypeScript/JavaScript Client for Stretchy - The Edge-Native Search & Intelligence Engine with Probabilistic Anomaly Detection.",
   "main": "dist/stretchy.umd.js",
   "module": "dist/stretchy.esm.js",
   "unpkg": "dist/stretchy.umd.js",
@@ -25,12 +25,9 @@
   },
   "keywords": [
     "search",
-    "elasticsearch",
-    "lucene",
     "bm25",
     "full-text-search",
     "anomaly-detection",
-    "cloudflare-workers",
     "edge-search",
     "database",
     "telemetry",

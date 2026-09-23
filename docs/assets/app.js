@@ -7,13 +7,13 @@
 const DEMO_DATASETS = {
   products: [
     { id: 'prod-001', name: 'Acoustic Pro Wireless Noise-Cancelling Headphones', category: 'electronics', price: 249.99, rating: 4.8, latency_ms: 12, sales_velocity: 840, description: 'Premium over-ear wireless headphones with active noise cancellation, transparency mode, and 40-hour battery life.' },
-    { id: 'prod-002', name: 'UltraSlim Mechanical Gaming Keyboard RGB', category: 'electronics', price: 129.50, rating: 4.6, latency_ms: 8, sales_velocity: 512, description: 'Hot-swappable low profile mechanical switches with per-key RGB backlighting and Bluetooth 5.2.' },
+    { id: 'prod-002', name: 'UltraSlim Mechanical Gaming Keyboard RGB', category: 'electronics', price: 129.50, rating: 4.6, latency_ms: 8, sales_velocity: 512, description: 'Hot-swappable low profile mechanical switches with per-key RGB backlighting and low-latency wireless 5.2.' },
     { id: 'prod-003', name: 'Ergonomic Mesh Office Chair with Lumbar Support', category: 'furniture', price: 349.00, rating: 4.7, latency_ms: 45, sales_velocity: 230, description: 'Breathable mesh executive office chair with adjustable 3D armrests and dynamic spinal alignment.' },
     { id: 'prod-004', name: 'Smart 4K Ultra HD Streaming Cinema Projector', category: 'electronics', price: 899.00, rating: 4.5, latency_ms: 28, sales_velocity: 120, description: 'Laser optical engine with 3000 ANSI lumens, HDR10+, autofocus, and built-in edge streaming apps.' },
     { id: 'prod-005', name: 'Stainless Steel Insulated Thermal Travel Mug 24oz', category: 'home', price: 34.95, rating: 4.9, latency_ms: 5, sales_velocity: 1450, description: 'Double-wall vacuum insulation keeps liquids icy cold for 24h or piping hot for 12h without condensation.' },
     { id: 'prod-006', name: 'Organic Cold-Pressed Matcha Ceremonial Grade', category: 'grocery', price: 28.00, rating: 4.9, latency_ms: 6, sales_velocity: 1890, description: 'First harvest stone-ground green tea leaves from Uji, Kyoto. Rich in L-theanine antioxidants.' },
     { id: 'prod-007', name: 'Quantum Core Supercomputing Dev Kit (Anomaly)', category: 'electronics', price: 14999.00, rating: 5.0, latency_ms: 480, sales_velocity: 2, description: 'Cryogenic qubit control board for quantum algorithm research. Rare high-value outlier document.' },
-    { id: 'prod-008', name: 'Magnetic Wireless Power Bank 10,000mAh', category: 'electronics', price: 49.99, rating: 4.4, latency_ms: 14, sales_velocity: 960, description: 'Snap-on MagSafe compatible fast charger with foldable kickstand and dual USB-C Power Delivery.' },
+    { id: 'prod-008', name: 'Magnetic Wireless Power Bank 10,000mAh', category: 'electronics', price: 49.99, rating: 4.4, latency_ms: 14, sales_velocity: 960, description: 'Snap-on magnetic fast charger with foldable kickstand and dual USB-C Power Delivery.' },
     { id: 'prod-009', name: 'Solid Walnut Minimalist Desk Organizer Tray', category: 'office', price: 58.00, rating: 4.7, latency_ms: 18, sales_velocity: 310, description: 'CNC milled sustainably harvested American walnut with brass accents for stationery and EDC gear.' },
     { id: 'prod-010', name: 'Studio Monitor Audio Interface USB-C 192kHz', category: 'audio', price: 179.00, rating: 4.8, latency_ms: 11, sales_velocity: 420, description: 'Dual low-noise preamps with +48V phantom power, zero-latency direct monitoring, and MIDI I/O.' },
     { id: 'prod-011', name: 'Precision CNC Aluminum Laptop Stand Foldable', category: 'office', price: 42.50, rating: 4.6, latency_ms: 9, sales_velocity: 680, description: 'Anodized finish with rubberized grip pads, 6-level ergonomic elevation, and heat dissipation slots.' },
@@ -278,7 +278,7 @@ class AveLynxPlaygroundApp {
           .sort((a, b) => b.score - a.score);
       }
     } else {
-      // Live Cloudflare Edge Worker Query
+      // Live Distributed Edge Query
       try {
         const res = await this.client.search(this.activeDatasetKey, { query, limit: 30 });
         hits = res.hits || [];

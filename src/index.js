@@ -421,7 +421,7 @@ class StretchyClient {
   }
 
   /**
-   * Run deep integrity check on a single index (verifies FTS/Lucene inverted index, JSON, and SHA-256 hashes).
+   * Run deep integrity check on a single index (verifies full-text inverted index, JSON, and SHA-256 hashes).
    * Optionally auto-repairs detected corruptions with repair=true.
    */
   async checkIntegrity(indexName, repair = false) {

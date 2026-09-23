@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AveLynx Stretchy | Edge-Native Lucene & Elastic Alternative with Probabilistic Anomaly Detection</title>
-  <meta name="description" content="Official TypeScript/JavaScript Client & Live Playground for Stretchy - The Edge-Native Lucene & Elastic Alternative with real-time probabilistic anomaly detection and dynamic query slicing.">
-  <meta name="keywords" content="stretchy, avelynx, search engine, lucene, elasticsearch alternative, bm25, cloudflare workers, full text search, anomaly detection, edge search">
-  <meta property="og:title" content="AveLynx Stretchy - The Edge-Native Lucene Alternative">
+  <title>AveLynx Stretchy | Edge-Native Search & Intelligence Engine with Probabilistic Anomaly Detection</title>
+  <meta name="description" content="Official TypeScript/JavaScript Client & Live Playground for Stretchy - The Edge-Native Search & Intelligence Engine with real-time probabilistic anomaly detection and dynamic query slicing.">
+  <meta name="keywords" content="stretchy, avelynx, search engine, bm25, full text search, anomaly detection, edge search, real-time analytics">
+  <meta property="og:title" content="AveLynx Stretchy - The Edge-Native Search & Intelligence Engine">
   <meta property="og:description" content="Sub-15ms BM25 full-text search with zero cluster tax and real-time statistical anomaly detection.">
   <meta property="og:image" content="assets/avelynx-logo.png">
   <meta property="og:type" content="website">
@@ -76,18 +76,18 @@
     <div class="container">
       <div class="hero-badge">
         <span class="pulse-dot"></span>
-        <span>Cloudflare 300+ Edge POPs &bull; Zero Cluster Tax &bull; Probabilistic Anomaly Detection</span>
+        <span>Global 300+ Edge POPs &bull; Zero Cluster Tax &bull; Probabilistic Anomaly Detection</span>
       </div>
 
       <h1 class="hero-title">
-        The Edge-Native Lucene &amp; Elastic Alternative
+        The Edge-Native Search &amp; Intelligence Engine
         <br>
         <span class="hero-title-gradient">Built for Extreme Scale &amp; Real-Time Insights</span>
       </h1>
 
       <p class="hero-subtitle">
         Engineered for full-text BM25 search precision without the $500/month cluster tax or JVM pauses.
-        Run native queries on Cloudflare's Global Edge with built-in real-time Z-score anomaly detection and dynamic query slicing.
+        Run native BM25 queries on a distributed Global Edge with built-in real-time Z-score anomaly detection and dynamic query slicing.
       </p>
 
       <div class="hero-cta-group">
@@ -130,7 +130,7 @@
         <div class="section-tag">Interactive Client Demo</div>
         <h2 class="section-title">Live Stretchy Client Playground</h2>
         <p class="section-desc">
-          Test real-time Lucene &amp; BM25 queries, explore the visual query slicer, and watch probabilistic anomaly detection flag statistical outliers on the fly.
+          Test real-time BM25 full-text queries, explore the visual query slicer, and watch probabilistic anomaly detection flag statistical outliers on the fly.
         </p>
       </div>
 
@@ -343,7 +343,7 @@
         <!-- Method 2 -->
         <div class="api-item">
           <div class="api-sig">client.search(indexName, options)</div>
-          <div class="api-desc">Performs full-text search with Lucene matching, BM25 scoring, fuzzy term expansion, and faceted aggregation.</div>
+          <div class="api-desc">Performs full-text search with exact &amp; phrase matching, BM25 scoring, fuzzy term expansion, and faceted aggregation.</div>
           <div class="api-code-snippet">const res = await client.search('products', { query: 'wireless', limit: 20, fuzzy: true });</div>
         </div>
 
@@ -383,9 +383,9 @@
     <div class="container">
       <div class="section-header">
         <div class="section-tag">Architecture Comparison</div>
-        <h2 class="section-title">Why Stretchy vs. Legacy Clusters</h2>
+        <h2 class="section-title">Why Stretchy vs. Dedicated Clusters</h2>
         <p class="section-desc">
-          Compare the operational and cost profiles of Stretchy against traditional Elasticsearch and Splunk setups.
+          Compare the operational and cost profiles of Stretchy against traditional monolithic cluster architectures.
         </p>
       </div>
 
@@ -394,7 +394,7 @@
           <thead>
             <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
               <th style="padding: 16px 20px;">Feature</th>
-              <th style="padding: 16px 20px;">Elasticsearch / OpenSearch</th>
+              <th style="padding: 16px 20px;">Traditional Dedicated Clusters</th>
               <th style="padding: 16px 20px; color: var(--accent-indigo); font-weight: 700;">AveLynx Stretchy</th>
             </tr>
           </thead>

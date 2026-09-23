@@ -1,27 +1,27 @@
 # AveLynx Stretchy ⚡
-### The Edge-Native Lucene & Elastic Alternative with Probabilistic Anomaly Detection
+### The Edge-Native Search & Intelligence Engine with Probabilistic Anomaly Detection
 
 [![Live Playground](https://img.shields.io/badge/Live_Playground-client.avelynx.net-6366f1?style=flat-square&logo=cloudflare)](https://client.avelynx.net)
 [![npm version](https://img.shields.io/npm/v/@avelynx/stretchy.svg?style=flat-square&color=6366f1)](https://www.npmjs.com/package/@avelynx/stretchy)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square)](LICENSE)
-[![Edge Network](https://img.shields.io/badge/Cloudflare_Edge-300+_Cities-f38020?style=flat-square)](https://search.avelynx.net)
-[![Architecture](https://img.shields.io/badge/Engine-BM25_+_Lucene-8b5cf6?style=flat-square)](https://search.avelynx.net)
+[![Edge Network](https://img.shields.io/badge/Global_Edge-300+_Cities-f38020?style=flat-square)](https://search.avelynx.net)
+[![Architecture](https://img.shields.io/badge/Engine-BM25_+_FTS-8b5cf6?style=flat-square)](https://search.avelynx.net)
 [![Pricing](https://img.shields.io/badge/Zero_Cluster_Tax-90%25_Cost_Reduction-10b981?style=flat-square)](https://appmanagement.avelynx.net/store?app=stretchy)
 [![Community](https://img.shields.io/badge/Community-AveLynx_Forum-3b82f6?style=flat-square)](https://community.avelynx.net)
 
-**Stretchy** delivers the full-text search precision of **Apache Lucene** and the relevance of **BM25 scoring** without the **$500/month cluster tax**, garbage collection pauses, or JVM management headaches.
+**Stretchy** delivers enterprise full-text search precision and the relevance of **BM25 scoring** without the **$500/month cluster tax**, garbage collection pauses, or complex node management.
 
-Engineered to run natively on **Cloudflare's Global Edge Network (D1 FTS5)** with an on-premise **Apache Lucene 9.12 microservice** option, Stretchy is the first modern search engine with **native real-time probabilistic anomaly detection** and dynamic query slicing built directly into the client query path.
+Engineered to run natively on a **Distributed Global Edge Network** with an ultra-fast local microservice deployment option, Stretchy is the first modern search engine with **native real-time probabilistic anomaly detection** and dynamic query slicing built directly into the client query path.
 
 🔗 **Try the Interactive Web Client & Sandbox**: [https://client.avelynx.net](https://client.avelynx.net)
 
 ---
 
-## ⚡ Why Stretchy vs. Competitors?
+## ⚡ Why Stretchy vs. Traditional Systems?
 
-| Feature / Metric | **Elasticsearch / OpenSearch** | **Splunk** | **Algolia** | **AveLynx Stretchy ⚡** |
+| Feature / Metric | **Traditional Dedicated Clusters** | **Legacy Log Platforms** | **Proprietary SaaS Indexes** | **AveLynx Stretchy ⚡** |
 |:---|:---|:---|:---|:---|
-| **Base Infrastructure Cost** | **$200 – $1,200+/mo** just for idle nodes | **$2,000+/mo** (GB/day ingest tax) | **$1.50 per 1k searches** (scales exponentially) | **Near $0 at rest** (pennies per million queries on Cloudflare Edge) |
+| **Base Infrastructure Cost** | **$200 – $1,200+/mo** just for idle nodes | **$2,000+/mo** (GB/day ingest tax) | **$1.50 per 1k searches** (scales exponentially) | **Near $0 at rest** (pennies per million queries on Distributed Edge) |
 | **Idle Memory / CPU** | Heavy JVM, 4GB–32GB RAM minimum, GC pauses | Gigantic indexing daemons | Hosted SaaS | **Sub-100ms cold start**, zero idle cluster RAM |
 | **Deployment & Ops** | Shard allocation, master nodes, zookeeper, reindexing pains | Complex forwarders, indexing tiers | Proprietary Cloud Only | **1-Command Edge Deploy** or single lightweight binary |
 | **Global Edge Latency** | Centralized regional clusters (150ms+ round trips) | Centralized indexers | Proprietary edge CDN | **Native 300+ Edge POPs** (sub-15ms worldwide) |

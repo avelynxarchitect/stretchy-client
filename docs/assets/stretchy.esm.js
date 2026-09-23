@@ -1,7 +1,7 @@
 /**
  * @avelynx/stretchy v1.0.0
  * Modern ES Module Bundle
- * Official client for Stretchy - Edge-Native Lucene & BM25 with Probabilistic Anomaly Detection
+ * Official client for Stretchy - Edge-Native Search & BM25 with Probabilistic Anomaly Detection
  * (c) 2026 AveLynx (MYZBROS ENTERPRISES LLC) - Apache 2.0
  */
 /**
@@ -427,7 +427,7 @@ class StretchyClient {
   }
 
   /**
-   * Run deep integrity check on a single index (verifies FTS/Lucene inverted index, JSON, and SHA-256 hashes).
+   * Run deep integrity check on a single index (verifies full-text inverted index, JSON, and SHA-256 hashes).
    * Optionally auto-repairs detected corruptions with repair=true.
    */
   async checkIntegrity(indexName, repair = false) {
