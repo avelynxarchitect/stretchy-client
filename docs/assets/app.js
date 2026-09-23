@@ -1,7 +1,23 @@
 /**
- * AveLynx Stretchy Client - GitHub Pages Interactive Application
+ * AveLynx Stretchy Client - Interactive Playground & Slicer Testbench
  * (c) 2026 AveLynx (MYZBROS ENTERPRISES LLC)
  */
+
+// Levenshtein edit distance for BM25 fuzzy term matching
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[m][n];
+}
 
 // 1. Built-in High-Fidelity Demo Datasets for Zero-Setup Offline Playground
 const DEMO_DATASETS = {
@@ -42,16 +58,21 @@ class AveLynxPlaygroundApp {
   constructor() {
     this.client = null;
     this.activeSource = 'mock'; // 'mock' or 'live'
-    this.activeDatasetKey = 'products';
-    this.anomalyField = 'price';
-    this.activeTab = 'cards';
+    this.activeDatasetKey = 'soc_logs';
+    this.anomalyField = 'latency_ms';
     this.activeInstallTab = 'npm';
+    this.ceilingFilter = 100; // Percentage of max value (100 = no filter)
+    this.currentHits = [];
+    this.currentAnomalyReport = null;
 
     this.initElements();
     this.initClient();
     this.initTheme();
-    this.bindEvents();
     this.initElasticStretch();
+    this.initScenarios();
+    this.initElasticSlider();
+    this.initDocInspector();
+    this.bindEvents();
     this.runSearch();
   }
 
@@ -74,14 +95,39 @@ class AveLynxPlaygroundApp {
     this.statIQR = document.getElementById('statIQR');
     this.statOutliers = document.getElementById('statOutliers');
 
+    // Visual distribution plot elements
+    this.distributionTrack = document.getElementById('distributionTrack');
+    this.distMinLabel = document.getElementById('distMinLabel');
+    this.distMeanLabel = document.getElementById('distMeanLabel');
+    this.distMaxLabel = document.getElementById('distMaxLabel');
+
+    // Elastic ceiling slider
+    this.elasticCeilingSlider = document.getElementById('elasticCeilingSlider');
+    this.sliderValueLabel = document.getElementById('sliderValueLabel');
+    this.sliderResetBtn = document.getElementById('sliderResetBtn');
+
+    // Results & code
     this.resultsContainer = document.getElementById('resultsContainer');
     this.resultsCountLabel = document.getElementById('resultsCountLabel');
     this.codeSnippet = document.getElementById('codeSnippet');
     this.installCommand = document.getElementById('installCommand');
+
+    // Document Inspector elements
+    this.docInspectorModal = document.getElementById('docInspectorModal');
+    this.docInspectorBackdrop = document.getElementById('docInspectorBackdrop');
+    this.inspectorCloseBtn = document.getElementById('inspectorCloseBtn');
+    this.inspectorDoneBtn = document.getElementById('inspectorDoneBtn');
+    this.inspectorCopyJsonBtn = document.getElementById('inspectorCopyJsonBtn');
+    this.inspectorDocTitle = document.getElementById('inspectorDocTitle');
+    this.inspectorBadge = document.getElementById('inspectorBadge');
+    this.inspectorBm25Score = document.getElementById('inspectorBm25Score');
+    this.inspectorMetricName = document.getElementById('inspectorMetricName');
+    this.inspectorMetricVal = document.getElementById('inspectorMetricVal');
+    this.inspectorAnomalyStatus = document.getElementById('inspectorAnomalyStatus');
+    this.inspectorJsonCode = document.getElementById('inspectorJsonCode');
   }
 
   initClient() {
-    // If StretchyClient is loaded via script tag (stretchy.umd.js)
     if (typeof window.StretchyClient === 'function') {
       this.client = new window.StretchyClient({
         baseUrl: 'https://search.avelynx.net'
@@ -163,6 +209,114 @@ class AveLynxPlaygroundApp {
       void pill.offsetWidth;
       pill.classList.add('stretchy-snapping');
     });
+  }
+
+  // 1-Click Interactive Scenarios
+  initScenarios() {
+    const chips = document.querySelectorAll('.scenario-chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const scenario = chip.getAttribute('data-scenario');
+        this.applyScenario(scenario);
+      });
+    });
+  }
+
+  applyScenario(scenario) {
+    // Reset ceiling slider
+    this.ceilingFilter = 100;
+    if (this.elasticCeilingSlider) this.elasticCeilingSlider.value = 100;
+    if (this.sliderValueLabel) this.sliderValueLabel.textContent = 'Showing all records (No ceiling cap)';
+
+    if (scenario === 'cyber') {
+      this.activeDatasetKey = 'soc_logs';
+      this.anomalyField = 'latency_ms';
+      if (this.datasetSelect) this.datasetSelect.value = 'soc_logs';
+      if (this.queryInput) this.queryInput.value = '*';
+    } else if (scenario === 'typo') {
+      this.activeDatasetKey = 'products';
+      this.anomalyField = 'price';
+      if (this.datasetSelect) this.datasetSelect.value = 'products';
+      if (this.queryInput) this.queryInput.value = 'noiz canclling';
+    } else if (scenario === 'grants') {
+      this.activeDatasetKey = 'grants';
+      this.anomalyField = 'amount';
+      if (this.datasetSelect) this.datasetSelect.value = 'grants';
+      if (this.queryInput) this.queryInput.value = '*';
+    } else if (scenario === 'slicer') {
+      this.activeDatasetKey = 'products';
+      this.anomalyField = 'price';
+      if (this.datasetSelect) this.datasetSelect.value = 'products';
+      if (this.queryInput) this.queryInput.value = 'category:electronics';
+    }
+
+    this.runSearch();
+  }
+
+  // Elastic Ceiling Slider
+  initElasticSlider() {
+    if (this.elasticCeilingSlider) {
+      this.elasticCeilingSlider.addEventListener('input', (e) => {
+        this.ceilingFilter = parseInt(e.target.value, 10);
+        this.runSearch();
+      });
+    }
+
+    if (this.sliderResetBtn) {
+      this.sliderResetBtn.addEventListener('click', () => {
+        this.ceilingFilter = 100;
+        if (this.elasticCeilingSlider) this.elasticCeilingSlider.value = 100;
+        this.runSearch();
+      });
+    }
+  }
+
+  // Document Inspector Modal
+  initDocInspector() {
+    const closeModal = () => {
+      if (this.docInspectorModal) this.docInspectorModal.style.display = 'none';
+    };
+
+    if (this.docInspectorBackdrop) this.docInspectorBackdrop.addEventListener('click', closeModal);
+    if (this.inspectorCloseBtn) this.inspectorCloseBtn.addEventListener('click', closeModal);
+    if (this.inspectorDoneBtn) this.inspectorDoneBtn.addEventListener('click', closeModal);
+
+    if (this.inspectorCopyJsonBtn) {
+      this.inspectorCopyJsonBtn.addEventListener('click', () => {
+        if (!this.inspectorJsonCode) return;
+        navigator.clipboard.writeText(this.inspectorJsonCode.textContent).then(() => {
+          const orig = this.inspectorCopyJsonBtn.innerHTML;
+          this.inspectorCopyJsonBtn.textContent = 'JSON Copied!';
+          setTimeout(() => { this.inspectorCopyJsonBtn.innerHTML = orig; }, 2000);
+        });
+      });
+    }
+  }
+
+  openDocInspector(hit, isAnomaly) {
+    if (!this.docInspectorModal) return;
+    const src = hit.source || {};
+    const title = src.name || src.title || src.action || hit.id;
+    const val = src[this.anomalyField];
+
+    if (this.inspectorDocTitle) this.inspectorDocTitle.textContent = title;
+    if (this.inspectorBadge) this.inspectorBadge.textContent = src.category || src.service || src.agency || 'Record';
+    if (this.inspectorBm25Score) this.inspectorBm25Score.textContent = 'BM25: ' + hit.score;
+    if (this.inspectorMetricName) this.inspectorMetricName.textContent = this.anomalyField;
+    if (this.inspectorMetricVal) this.inspectorMetricVal.textContent = val !== undefined ? (typeof val === 'number' ? val.toLocaleString() : val) : '--';
+
+    if (this.inspectorAnomalyStatus) {
+      this.inspectorAnomalyStatus.textContent = isAnomaly ? 'Outlier (z >= 2.2)' : 'Normal Distribution';
+      this.inspectorAnomalyStatus.style.color = isAnomaly ? 'var(--accent-rose)' : 'var(--accent-emerald)';
+    }
+
+    if (this.inspectorJsonCode) {
+      this.inspectorJsonCode.textContent = JSON.stringify(src, null, 2);
+    }
+
+    this.docInspectorModal.style.display = 'flex';
   }
 
   bindEvents() {
@@ -251,46 +405,87 @@ class AveLynxPlaygroundApp {
   }
 
   async runSearch() {
-    const query = (this.queryInput ? this.queryInput.value : '*').trim() || '*';
+    const rawQuery = (this.queryInput ? this.queryInput.value : '*').trim() || '*';
+    const query = rawQuery;
     let hits = [];
     let totalDocs = 0;
-    let queryTimeMs = 8;
+
+    const fullList = DEMO_DATASETS[this.activeDatasetKey] || DEMO_DATASETS.products;
+    totalDocs = fullList.length;
 
     if (this.activeSource === 'mock') {
-      const fullList = DEMO_DATASETS[this.activeDatasetKey] || DEMO_DATASETS.products;
-      totalDocs = fullList.length;
-
-      // Filter in-memory
       if (query === '*' || query === '') {
-        hits = fullList.map((doc, idx) => ({ id: doc.id, score: 1.0, source: doc }));
+        hits = fullList.map(doc => ({ id: doc.id, score: 1.0, source: doc }));
+      } else if (query.includes(':')) {
+        // Field targeting (e.g. category:electronics)
+        const [field, val] = query.split(':');
+        const cleanField = field.trim().toLowerCase();
+        const cleanVal = val.trim().toLowerCase();
+        hits = fullList
+          .filter(doc => String(doc[cleanField] || '').toLowerCase().includes(cleanVal))
+          .map(doc => ({ id: doc.id, score: 2.5, source: doc }));
       } else {
+        // BM25 term + Levenshtein fuzzy expansion
         const terms = query.toLowerCase().split(/\s+/);
         hits = fullList
           .map(doc => {
-            const str = JSON.stringify(doc).toLowerCase();
+            const docStr = JSON.stringify(doc).toLowerCase();
+            const docWords = docStr.replace(/[^a-z0-9]/g, ' ').split(/\s+/);
             let score = 0;
+
             terms.forEach(t => {
-              if (str.includes(t)) score += 1.5;
+              if (docStr.includes(t)) {
+                score += 2.0;
+              } else {
+                // Fuzzy check
+                for (const w of docWords) {
+                  if (w.length >= 4 && t.length >= 4) {
+                    const dist = levenshtein(t, w);
+                    if (dist <= 2) {
+                      score += 1.4;
+                      break;
+                    }
+                  }
+                }
+              }
             });
+
             return { id: doc.id, score: Math.round(score * 10) / 10, source: doc };
           })
           .filter(h => h.score > 0)
           .sort((a, b) => b.score - a.score);
       }
     } else {
-      // Live Distributed Edge Query
+      // Live Edge Worker Query
       try {
         const res = await this.client.search(this.activeDatasetKey, { query, limit: 30 });
         hits = res.hits || [];
         totalDocs = res.total || hits.length;
-        queryTimeMs = res.query_time_ms || 14;
       } catch (err) {
         console.warn('Live search fallback to mock demo:', err.message);
-        const fullList = DEMO_DATASETS[this.activeDatasetKey] || DEMO_DATASETS.products;
-        totalDocs = fullList.length;
         hits = fullList.map(doc => ({ id: doc.id, score: 1.0, source: doc }));
       }
     }
+
+    // Apply elastic ceiling slider filter if < 100%
+    if (this.ceilingFilter < 100 && hits.length > 0) {
+      const metricVals = hits.map(h => h.source ? h.source[this.anomalyField] : 0).filter(v => typeof v === 'number');
+      const maxMetric = Math.max(...metricVals, 1);
+      const capVal = maxMetric * (this.ceilingFilter / 100);
+
+      hits = hits.filter(h => {
+        const v = h.source ? h.source[this.anomalyField] : 0;
+        return typeof v !== 'number' || v <= capVal;
+      });
+
+      if (this.sliderValueLabel) {
+        this.sliderValueLabel.textContent = 'Ceiling: <= ' + Math.round(capVal).toLocaleString() + ' (' + hits.length + ' of ' + totalDocs + ' kept)';
+      }
+    } else if (this.sliderValueLabel) {
+      this.sliderValueLabel.textContent = 'Showing all records (No ceiling cap)';
+    }
+
+    this.currentHits = hits;
 
     // 1. Process Slicer Gauge
     const slice = this.client ? this.client.querySlicer(hits.length, totalDocs) : {
@@ -302,20 +497,75 @@ class AveLynxPlaygroundApp {
     if (this.slicerLabel) this.slicerLabel.textContent = 'Slice: ' + slice.percent + '% of Dataset';
     if (this.slicerStats) this.slicerStats.textContent = hits.length + ' / ' + totalDocs + ' documents';
 
-    // 2. Process Probabilistic Anomaly Detection
-    const anomalyReport = this.client 
+    // 2. Process Probabilistic Anomaly Detection (Native or Client Fallback)
+    let anomalyReport = (this.client && typeof this.client.detectAnomalies === 'function')
       ? this.client.detectAnomalies(hits, { field: this.anomalyField, zThreshold: 2.2 })
-      : { stats: { mean: 0, stdDev: 0, median: 0, iqr: 0 }, anomalies: [] };
+      : this.computeLocalAnomalies(hits, this.anomalyField);
 
+    if (!anomalyReport || !anomalyReport.stats || anomalyReport.stats.mean === undefined) {
+      anomalyReport = this.computeLocalAnomalies(hits, this.anomalyField);
+    }
+
+    this.currentAnomalyReport = anomalyReport;
     this.renderAnomalyStats(anomalyReport);
 
-    // 3. Render Results
+    // 3. Render Visual Distribution Plot
+    this.renderDistributionPlot(hits, anomalyReport);
+
+    // 4. Render Results Cards
     this.renderHits(hits, anomalyReport);
 
-    // 4. Update Generated Code Snippet
+    // 5. Update Generated Code Snippet
     this.updateCodeSnippet(query, slice, anomalyReport);
   }
 
+  computeLocalAnomalies(hits, field) {
+    const vals = hits
+      .map((h, idx) => ({ val: (h.source && typeof h.source[field] === 'number') ? h.source[field] : null, index: idx }))
+      .filter(item => item.val !== null);
+
+    if (vals.length === 0) {
+      return { stats: { mean: 0, stdDev: 0, median: 0, iqr: 0 }, anomalies: [], anomalyCount: 0 };
+    }
+
+    const nums = vals.map(v => v.val);
+    const sum = nums.reduce((a, b) => a + b, 0);
+    const mean = sum / nums.length;
+    const variance = nums.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / nums.length;
+    const stdDev = Math.sqrt(variance);
+
+    const sorted = [...nums].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+
+    const q1 = sorted[Math.floor(sorted.length * 0.25)];
+    const q3 = sorted[Math.floor(sorted.length * 0.75)];
+    const iqr = q3 - q1;
+
+    // Median Absolute Deviation (MAD) for robust outlier detection across any sample size
+    const deviations = nums.map(x => Math.abs(x - median)).sort((a, b) => a - b);
+    const mad = deviations.length % 2 === 0 ? (deviations[mid - 1] + deviations[mid]) / 2 : deviations[mid];
+
+    const anomalies = [];
+    vals.forEach(item => {
+      const z = stdDev > 0 ? (item.val - mean) / stdDev : 0;
+      const modZ = mad > 0 ? (0.6745 * Math.abs(item.val - median)) / mad : 0;
+      if (Math.abs(z) >= 2.0 || modZ >= 3.0 || (median > 0 && item.val >= median * 4)) {
+        anomalies.push({ index: item.index, value: item.val, zScore: Math.round((modZ >= 3.0 ? modZ : z) * 100) / 100 });
+      }
+    });
+
+    return {
+      stats: {
+        mean: Math.round(mean * 100) / 100,
+        stdDev: Math.round(stdDev * 100) / 100,
+        median: Math.round(median * 100) / 100,
+        iqr: Math.round(iqr * 100) / 100
+      },
+      anomalies,
+      anomalyCount: anomalies.length
+    };
+  }
   renderAnomalyStats(report) {
     const s = report.stats || {};
     if (this.statMean) this.statMean.textContent = s.mean !== undefined ? s.mean.toLocaleString() : '--';
@@ -335,6 +585,67 @@ class AveLynxPlaygroundApp {
     }
   }
 
+  // Visual Metric Distribution Plot
+  renderDistributionPlot(hits, anomalyReport) {
+    if (!this.distributionTrack) return;
+    this.distributionTrack.innerHTML = '';
+
+    const anomalyIndices = new Set((anomalyReport.anomalies || []).map(a => a.index));
+    const vals = hits.map(h => (h.source && typeof h.source[this.anomalyField] === 'number') ? h.source[this.anomalyField] : null).filter(v => v !== null);
+
+    if (vals.length === 0) {
+      if (this.distMinLabel) this.distMinLabel.textContent = '--';
+      if (this.distMeanLabel) this.distMeanLabel.textContent = '&mu; --';
+      if (this.distMaxLabel) this.distMaxLabel.textContent = '--';
+      return;
+    }
+
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const mean = anomalyReport.stats ? anomalyReport.stats.mean : min;
+
+    const unit = this.anomalyField === 'latency_ms' ? 'ms' : (this.anomalyField === 'amount' || this.anomalyField === 'price' ? '$' : '');
+    const formatVal = (v) => unit === '$' ? '$' + Math.round(v).toLocaleString() : Math.round(v).toLocaleString() + unit;
+
+    if (this.distMinLabel) this.distMinLabel.textContent = formatVal(min);
+    if (this.distMeanLabel) this.distMeanLabel.textContent = 'μ (Mean: ' + formatVal(mean) + ')';
+    if (this.distMaxLabel) this.distMaxLabel.textContent = formatVal(max);
+
+    // Place dots
+    hits.forEach((hit, idx) => {
+      const src = hit.source || {};
+      const val = src[this.anomalyField];
+      if (typeof val !== 'number') return;
+
+      const isAnomaly = anomalyIndices.has(idx);
+      const pct = max === min ? 50 : Math.round(((val - min) / (max - min)) * 92 + 4);
+      const title = src.name || src.title || src.action || hit.id;
+
+      const dot = document.createElement('div');
+      dot.className = 'distribution-dot' + (isAnomaly ? ' outlier' : '');
+      dot.style.left = pct + '%';
+      dot.title = title + ' (' + formatVal(val) + (isAnomaly ? ' - OUTLIER' : '') + ') - Click to inspect';
+
+      dot.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.highlightCard(hit.id);
+      });
+
+      this.distributionTrack.appendChild(dot);
+    });
+  }
+
+  highlightCard(hitId) {
+    const card = document.querySelector('[data-hit-id="' + hitId + '"]');
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.remove('is-highlighted');
+      void card.offsetWidth;
+      card.classList.add('is-highlighted');
+      setTimeout(() => card.classList.remove('is-highlighted'), 2000);
+    }
+  }
+
   renderHits(hits, anomalyReport) {
     if (!this.resultsContainer) return;
 
@@ -343,21 +654,21 @@ class AveLynxPlaygroundApp {
     }
 
     if (hits.length === 0) {
-      this.resultsContainer.innerHTML = '<div style="text-align: center; padding: 48px; color: var(--text-muted);"><p>No documents matched your query.</p><p style="font-size: 0.85rem; margin-top: 6px;">Try searching for "*", "wireless", "audio", "grant", or "burst".</p></div>';
+      this.resultsContainer.innerHTML = '<div style="text-align: center; padding: 48px; color: var(--text-muted);"><p>No documents matched your query or filter ceiling.</p><p style="font-size: 0.85rem; margin-top: 6px;">Try adjusting the slider or choosing a guided scenario above.</p></div>';
       return;
     }
 
-    const anomalyIndices = new Set(anomalyReport.anomalies.map(a => a.index));
+    const anomalyIndices = new Set((anomalyReport.anomalies || []).map(a => a.index));
 
     this.resultsContainer.innerHTML = hits.map((hit, idx) => {
       const src = hit.source || {};
       const isAnomaly = anomalyIndices.has(idx);
       const title = src.name || src.title || src.action || hit.id;
       const snippet = src.description || src.summary || ('Service: ' + src.service + ' • IP: ' + src.ip);
-      const metricLabel = this.anomalyField + ': ' + (src[this.anomalyField] !== undefined ? src[this.anomalyField] : '--');
+      const metricLabel = this.anomalyField + ': ' + (src[this.anomalyField] !== undefined ? (typeof src[this.anomalyField] === 'number' ? src[this.anomalyField].toLocaleString() : src[this.anomalyField]) : '--');
 
       return `
-        <div class="hit-card ${isAnomaly ? 'is-anomaly' : ''}">
+        <div class="hit-card ${isAnomaly ? 'is-anomaly' : ''}" data-hit-id="${hit.id}" title="Click to inspect full document payload">
           <div class="hit-title-row">
             <span class="hit-title">${title}</span>
             <span class="hit-score-badge">BM25: ${hit.score}</span>
@@ -366,11 +677,21 @@ class AveLynxPlaygroundApp {
           <div class="hit-meta-row">
             <span class="meta-tag">${metricLabel}</span>
             <span class="meta-tag">${src.category || src.agency || src.service || 'Document'}</span>
-            ${isAnomaly ? '<span class="meta-tag" style="background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); font-weight: 700;">Outlier (z > 2.2)</span>' : ''}
+            ${isAnomaly ? '<span class="meta-tag" style="background: rgba(244, 63, 94, 0.18); color: var(--accent-rose); font-weight: 700;">Outlier (z &ge; 2.2)</span>' : ''}
+            <span class="meta-tag" style="margin-left: auto; color: var(--accent-indigo); font-weight: 600;">Inspect JSON &rarr;</span>
           </div>
         </div>
       `;
     }).join('');
+
+    // Attach click events to open document inspector
+    this.resultsContainer.querySelectorAll('.hit-card').forEach((card, idx) => {
+      card.addEventListener('click', () => {
+        const hit = hits[idx];
+        const isAnomaly = anomalyIndices.has(idx);
+        if (hit) this.openDocInspector(hit, isAnomaly);
+      });
+    });
   }
 
   updateCodeSnippet(query, slice, anomalyReport) {

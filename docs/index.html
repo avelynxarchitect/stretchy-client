@@ -135,6 +135,60 @@
       </div>
 
       <div class="playground-card">
+        <!-- Educational Guided Intro Banner -->
+        <div class="playground-guided-banner">
+          <div class="guided-banner-icon">💡</div>
+          <div class="guided-banner-content">
+            <strong>Experience the Stretchy Advantage in 1 Click:</strong>
+            Traditional search tools only match raw text. Stretchy simultaneously scores <strong>BM25 relevance</strong>, computes <strong>dynamic query cuts</strong>, and catches <strong>probabilistic statistical anomalies</strong> on the distributed edge in under 15ms. Click any scenario below to see it live:
+          </div>
+        </div>
+
+        <!-- 1-Click Interactive Scenarios Bar -->
+        <div class="scenario-presets-bar">
+          <div class="scenario-presets-header">
+            <span class="scenario-label">⚡ Interactive Guided Scenarios:</span>
+            <span class="scenario-hint">Click a scenario to automatically configure the query and test Stretchy's capabilities</span>
+          </div>
+          <div class="scenario-chips" id="scenarioChipsContainer">
+            <button class="scenario-chip active" data-scenario="cyber" type="button">
+              <span class="scenario-chip-icon">🚨</span>
+              <span class="scenario-chip-text">
+                <span class="scenario-chip-title">Cyber Threat Outlier</span>
+                <span class="scenario-chip-desc">Catch 950ms data exfiltration spike</span>
+              </span>
+              <span class="scenario-chip-badge outlier-badge">+3.1&sigma; Spike</span>
+            </button>
+
+            <button class="scenario-chip" data-scenario="typo" type="button">
+              <span class="scenario-chip-icon">🎯</span>
+              <span class="scenario-chip-text">
+                <span class="scenario-chip-title">Fuzzy Typo Match</span>
+                <span class="scenario-chip-desc">BM25 matches "noiz canclling"</span>
+              </span>
+              <span class="scenario-chip-badge bm25-badge">BM25 Rank</span>
+            </button>
+
+            <button class="scenario-chip" data-scenario="grants" type="button">
+              <span class="scenario-chip-icon">💰</span>
+              <span class="scenario-chip-text">
+                <span class="scenario-chip-title">Capital Grant Outlier</span>
+                <span class="scenario-chip-desc">Flag $3.5M multi-state anomaly</span>
+              </span>
+              <span class="scenario-chip-badge outlier-badge">$3.5M Anomaly</span>
+            </button>
+
+            <button class="scenario-chip" data-scenario="slicer" type="button">
+              <span class="scenario-chip-icon">🔍</span>
+              <span class="scenario-chip-text">
+                <span class="scenario-chip-title">Elastic 33% Slicer</span>
+                <span class="scenario-chip-desc">Visual cut of electronics subset</span>
+              </span>
+              <span class="scenario-chip-badge slicer-badge">Dynamic Cut</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Toolbar -->
         <div class="playground-toolbar">
           <div class="playground-source-selector">
@@ -146,8 +200,8 @@
 
             <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-left: 8px;">Dataset:</span>
             <select id="datasetSelect" class="select-input">
-              <option value="products" selected>E-Commerce Products (12 items)</option>
-              <option value="soc_logs">Cybersecurity SOC Telemetry (8 logs)</option>
+              <option value="products">E-Commerce Products (12 items)</option>
+              <option value="soc_logs" selected>Cybersecurity SOC Telemetry (8 logs)</option>
               <option value="grants">Grant &amp; Tax Documents (4 items)</option>
             </select>
           </div>
@@ -208,6 +262,39 @@
             <div class="stat-chip">
               <div class="stat-chip-label">Outliers (z &ge; 2.2)</div>
               <div id="statOutliers" class="stat-chip-value" style="color: var(--accent-rose)">0</div>
+            </div>
+          </div>
+
+          <!-- Visual Distribution Strip -->
+          <div class="distribution-strip-container">
+            <div class="distribution-strip-header">
+              <span class="distribution-strip-title">Visual Metric Distribution Plot</span>
+              <span class="distribution-strip-legend">
+                <span class="dot-legend-item"><span class="legend-dot normal"></span> Normal Items</span>
+                <span class="dot-legend-item"><span class="legend-dot outlier"></span> Statistical Outlier (z &ge; 2.2)</span>
+              </span>
+            </div>
+            <div class="distribution-axis-wrap">
+              <div id="distributionTrack" class="distribution-track" title="Click any data point to highlight that document">
+                <!-- Dynamically populated with interactive glowing dots -->
+              </div>
+              <div class="distribution-axis-labels">
+                <span id="distMinLabel">0</span>
+                <span id="distMeanLabel" class="dist-mean-indicator">&mu; (Mean)</span>
+                <span id="distMaxLabel">Max</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Elastic Ceiling Range Filter -->
+          <div class="elastic-slider-bar">
+            <div class="elastic-slider-info">
+              <span class="slider-title">Dynamic Elastic Cut Filter:</span>
+              <span id="sliderValueLabel" class="slider-value">Showing all records (No ceiling cap)</span>
+            </div>
+            <div class="elastic-slider-control">
+              <input type="range" id="elasticCeilingSlider" min="10" max="100" value="100" class="elastic-range-input">
+              <button id="sliderResetBtn" class="slider-reset-btn" type="button" title="Reset ceiling filter">Reset</button>
             </div>
           </div>
         </div>
@@ -489,5 +576,46 @@
 
   <!-- Application Logic -->
   <script src="assets/app.js"></script>
+
+  <!-- Document Inspector Modal -->
+  <div id="docInspectorModal" class="inspector-modal" style="display: none;">
+    <div class="inspector-modal-backdrop" id="docInspectorBackdrop"></div>
+    <div class="inspector-modal-content">
+      <div class="inspector-header">
+        <div class="inspector-title-wrap">
+          <span class="inspector-badge" id="inspectorBadge">Document</span>
+          <h3 class="inspector-doc-title" id="inspectorDocTitle">Document Title</h3>
+        </div>
+        <button class="inspector-close-btn" id="inspectorCloseBtn" aria-label="Close Inspector">&times;</button>
+      </div>
+      <div class="inspector-body">
+        <div class="inspector-stats-row">
+          <div class="inspector-stat-box">
+            <span class="ins-label">BM25 Score</span>
+            <span class="ins-value" id="inspectorBm25Score">1.0</span>
+          </div>
+          <div class="inspector-stat-box">
+            <span class="ins-label" id="inspectorMetricName">Metric Value</span>
+            <span class="ins-value" id="inspectorMetricVal">--</span>
+          </div>
+          <div class="inspector-stat-box">
+            <span class="ins-label">Statistical Status</span>
+            <span class="ins-value" id="inspectorAnomalyStatus">Normal</span>
+          </div>
+        </div>
+
+        <div class="inspector-section-title">Raw Document Payload (JSON)</div>
+        <pre class="inspector-json-pre"><code id="inspectorJsonCode">{ }</code></pre>
+      </div>
+      <div class="inspector-footer">
+        <button class="btn btn-secondary" id="inspectorCopyJsonBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy JSON Payload
+        </button>
+        <button class="btn btn-primary" id="inspectorDoneBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
