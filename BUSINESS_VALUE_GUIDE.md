@@ -162,4 +162,5 @@ Businesses can begin evaluating AveLynx Stretchy with zero commitment:
    Install via npm (@avelynx/stretchy) or integrate the browser CDN tag into your company portal in minutes.
 
 *For enterprise licensing, custom integrations, or private deployments, contact:*  
-**AveLynx Engineering & Business Solutions**: [support@avelynx.net](mailto:support@avelynx.net) | [https://avelynx.net](https://avelynx.net)
+**AveLynx Engineering & Business Solutions**: [support@avelynx.net](mailto:support@avelynx.net) | [https://avelynx.net](https://avelynx.net)  
+**Headquarters:** Regus Downtown, 225 Broadway, San Diego, CA 92101

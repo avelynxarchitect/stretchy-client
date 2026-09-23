@@ -130,3 +130,6 @@ To deploy to your GitHub Pages:
 ## 📄 License
 
 Apache-2.0 © 2026 AveLynx (MYZBROS ENTERPRISES LLC).
+
+**Headquarters:** AveLynx / MYZBROS ENTERPRISES LLC &bull; Regus Downtown, 225 Broadway, San Diego, CA 92101
+**Contact:** support@avelynx.net | [https://avelynx.net](https://avelynx.net)
