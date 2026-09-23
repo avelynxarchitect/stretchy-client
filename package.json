@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@avelynx/stretchy",
   "version": "1.0.0",
   "description": "Official TypeScript/JavaScript Client for Stretchy - The Edge-Native Lucene & Elastic Alternative with Probabilistic Anomaly Detection.",
@@ -40,7 +40,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ksankstemp-dotcom/stretchy-client.git"
+    "url": "https://github.com/avelynxarchitect/stretchy-client.git"
   },
   "bugs": {
     "url": "https://community.avelynx.net"
