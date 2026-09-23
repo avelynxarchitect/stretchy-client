@@ -154,11 +154,20 @@ class AveLynxPlaygroundApp {
     // Copy Buttons
     document.querySelectorAll('.copy-trigger').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const text = btn.getAttribute('data-copy') || (this.installCommand ? this.installCommand.textContent : '');
+        let text = '';
+        if (btn.closest('.code-pane') && this.codeSnippet) {
+          text = this.codeSnippet.textContent;
+        } else if (btn.getAttribute('data-copy')) {
+          text = btn.getAttribute('data-copy');
+        } else if (this.installCommand) {
+          text = this.installCommand.textContent;
+        }
         navigator.clipboard.writeText(text).then(() => {
-          const originalText = btn.textContent;
+          const originalText = btn.innerHTML;
           btn.textContent = 'Copied!';
-          setTimeout(() => { btn.textContent = originalText; }, 2000);
+          setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        }).catch(err => {
+          console.warn('Clipboard write error:', err);
         });
       });
     });
@@ -250,13 +259,13 @@ class AveLynxPlaygroundApp {
     this.renderHits(hits, anomalyReport);
 
     // 4. Update Generated Code Snippet
-    this.updateCodeSnippet(query);
+    this.updateCodeSnippet(query, slice, anomalyReport);
   }
 
   renderAnomalyStats(report) {
     const s = report.stats || {};
     if (this.statMean) this.statMean.textContent = s.mean !== undefined ? s.mean.toLocaleString() : '--';
-    if (this.statStdDev) this.statStdDev.textContent = s.stdDev !== undefined ? 'b ' + s.stdDev.toLocaleString() : '--';
+    if (this.statStdDev) this.statStdDev.textContent = s.stdDev !== undefined ? '± ' + s.stdDev.toLocaleString() : '--';
     if (this.statMedian) this.statMedian.textContent = s.median !== undefined ? s.median.toLocaleString() : '--';
     if (this.statIQR) this.statIQR.textContent = s.iqr !== undefined ? s.iqr.toLocaleString() : '--';
     if (this.statOutliers) this.statOutliers.textContent = report.anomalyCount || '0';
@@ -290,7 +299,7 @@ class AveLynxPlaygroundApp {
       const src = hit.source || {};
       const isAnomaly = anomalyIndices.has(idx);
       const title = src.name || src.title || src.action || hit.id;
-      const snippet = src.description || src.summary || ('Service: ' + src.service + ' ?" IP: ' + src.ip);
+      const snippet = src.description || src.summary || ('Service: ' + src.service + ' • IP: ' + src.ip);
       const metricLabel = this.anomalyField + ': ' + (src[this.anomalyField] !== undefined ? src[this.anomalyField] : '--');
 
       return `
@@ -310,32 +319,32 @@ class AveLynxPlaygroundApp {
     }).join('');
   }
 
-  updateCodeSnippet(query) {
+  updateCodeSnippet(query, slice, anomalyReport) {
     if (!this.codeSnippet) return;
 
-    const jsCode = `// Live Stretchy Client Query Execution
-import { StretchyClient } from '@avelynx/stretchy';
+    const sliceLabel = (slice && slice.label) ? slice.label : (this.activeDatasetKey ? 'Matched results' : 'Matched');
+    const anomalyCount = (anomalyReport && anomalyReport.anomalyCount !== undefined) ? anomalyReport.anomalyCount : 0;
 
-const client = new StretchyClient({
-  baseUrl: 'https://search.avelynx.net'
-});
-
-// 1. Search with BM25 Relevance Scoring
-const res = await client.search('${this.activeDatasetKey}', {
-  query: '${query}',
-  limit: 20
-});
-
-// 2. Dynamic Query Slicer & Cut Gauge
-const slicer = client.querySlicer(res.hits.length, res.total);
-console.log(slicer.label);
-// => "${slicer ? slicer.label : 'Matched'}"
-
-// 3. Probabilistic Anomaly Detection
-const audit = client.detectAnomalies(res.hits, '${this.anomalyField}');
-if (audit.anomalyCount > 0) {
-  console.warn('Detected anomalies:', audit.anomalies);
-}`;
+    const jsCode = '// Live Stretchy Client Query Execution\n' +
+      "import { StretchyClient } from '@avelynx/stretchy';\n\n" +
+      'const client = new StretchyClient({\n' +
+      "  baseUrl: 'https://search.avelynx.net'\n" +
+      '});\n\n' +
+      '// 1. Search with BM25 Relevance Scoring\n' +
+      "const res = await client.search('" + this.activeDatasetKey + "', {\n" +
+      "  query: '" + query + "',\n" +
+      '  limit: 20\n' +
+      '});\n\n' +
+      '// 2. Dynamic Query Slicer & Cut Gauge\n' +
+      'const slicer = client.querySlicer(res.hits.length, res.total);\n' +
+      'console.log(slicer.label);\n' +
+      '// => "' + sliceLabel + '"\n\n' +
+      '// 3. Probabilistic Anomaly Detection\n' +
+      "const audit = client.detectAnomalies(res.hits, '" + this.anomalyField + "');\n" +
+      'if (audit.anomalyCount > 0) {\n' +
+      "  console.warn('Detected outliers:', audit.anomalyCount);\n" +
+      '  // => ' + anomalyCount + ' outlier(s) detected\n' +
+      '}';
 
     this.codeSnippet.textContent = jsCode;
   }
