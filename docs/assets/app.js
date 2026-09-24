@@ -2984,6 +2984,7 @@ const DEMO_DATASETS = {
 const DATASET_CONFIG = {
   soc_logs: {
     name: 'Security Operations Center (soc_logs)',
+    categoryField: 'severity',
     defaultField: 'severity_level',
     metricFields: [
       { id: 'severity_level', label: 'Severity Level (1-4 lvl)', unit: 'lvl' },
@@ -2996,6 +2997,7 @@ const DATASET_CONFIG = {
   },
   demo_cyber_threats: {
     name: 'Global Cyber Threat Telemetry (demo_cyber_threats)',
+    categoryField: 'threat_level',
     defaultField: 'threat_score',
     metricFields: [
       { id: 'threat_score', label: 'Threat Score (0-100 pts)', unit: 'pts' },
@@ -3008,6 +3010,7 @@ const DATASET_CONFIG = {
   },
   demo_ecommerce_bi: {
     name: 'Global E-Commerce Revenue BI (demo_ecommerce_bi)',
+    categoryField: 'region',
     defaultField: 'gross_revenue',
     metricFields: [
       { id: 'gross_revenue', label: 'Gross Revenue ($)', unit: '$' },
@@ -3020,6 +3023,7 @@ const DATASET_CONFIG = {
   },
   demo_grant_portfolio: {
     name: 'Public & Clean Energy Grants (demo_grant_portfolio)',
+    categoryField: 'focus_area',
     defaultField: 'amount_awarded',
     metricFields: [
       { id: 'amount_awarded', label: 'Amount Awarded ($)', unit: '$' },
@@ -3154,6 +3158,7 @@ class AveLynxPlaygroundApp {
     this.populationCache = { ...DEMO_DATASETS };
     this.queryCache = new Map();
     this.plotScope = 'all'; // 'all' | 'hits' | 'outliers'
+    this.chartType = 'bar'; // 'bar' | 'line' | 'pie' | 'dot'
 
     this.initElements();
     this.initClient();
@@ -3250,6 +3255,11 @@ class AveLynxPlaygroundApp {
     this.plotScopeHits = document.getElementById('plotScopeHits');
     this.plotScopeOutliers = document.getElementById('plotScopeOutliers');
     this.populateMetricFieldSelect();
+    this.visualChartContainer = document.getElementById('visualChartContainer');
+    this.chartTypeBar = document.getElementById('chartTypeBar');
+    this.chartTypeLine = document.getElementById('chartTypeLine');
+    this.chartTypePie = document.getElementById('chartTypePie');
+    this.chartTypeDot = document.getElementById('chartTypeDot');
   }
 
   initClient() {
@@ -4155,7 +4165,7 @@ class AveLynxPlaygroundApp {
     this.renderAnomalyStats(anomalyReport);
 
     // 3. Render Distribution Plot across Population
-    this.renderDistributionPlot(fullPopulation, hits, anomalyReport);
+    this.renderVisualChart();
 
     // 4. Render Results Cards
     this.renderHits(hits, anomalyReport);
@@ -4295,11 +4305,238 @@ class AveLynxPlaygroundApp {
     }
   }
 
-  renderDistributionPlot(fullList, hits, anomalyReport) {
-    if (!this.distributionTrack) return;
+
+  setChartType(type) {
+    this.chartType = type;
+    if (this.chartTypeBar) this.chartTypeBar.classList.toggle('active', type === 'bar');
+    if (this.chartTypeLine) this.chartTypeLine.classList.toggle('active', type === 'line');
+    if (this.chartTypePie) this.chartTypePie.classList.toggle('active', type === 'pie');
+    if (this.chartTypeDot) this.chartTypeDot.classList.toggle('active', type === 'dot');
+    this.renderVisualChart();
+  }
+
+  renderVisualChart() {
+    if (!this.visualChartContainer) return;
+    const fullList = this.populationCache[this.activeDatasetKey] || DEMO_DATASETS[this.activeDatasetKey] || [];
+    const hits = this.currentHits || [];
+    const anomalyReport = this.currentAnomalyReport || { baseline: { min: 0, max: 100, mean: 50 }, anomalies: [] };
+
+    // Filter list according to plot scope
+    const hitIdSet = new Set(hits.map(h => h.id || (h.source && h.source.id)));
+    const anomalySet = new Set((anomalyReport.anomalies || []).map(a => a.id));
+
+    let datasetToRender = fullList;
+    if (this.plotScope === 'hits') {
+      datasetToRender = fullList.filter(d => hitIdSet.has(d.id || d._id));
+    } else if (this.plotScope === 'outliers') {
+      datasetToRender = fullList.filter(d => anomalySet.has(d.id || d._id));
+    }
+
+    if (this.chartType === 'bar') {
+      this.renderBarChart(datasetToRender, hitIdSet, anomalySet);
+    } else if (this.chartType === 'line') {
+      this.renderLineChart(datasetToRender, anomalyReport.baseline);
+    } else if (this.chartType === 'pie') {
+      this.renderPieChart(datasetToRender);
+    } else {
+      this.renderDotStrip(fullList, hits, anomalyReport);
+    }
+  }
+
+  // 1. BAR GRAPH / HISTOGRAM
+  renderBarChart(docs, hitIdSet, anomalySet) {
+    if (!this.visualChartContainer) return;
+    if (docs.length === 0) {
+      this.visualChartContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">No records match selected scope</span>';
+      return;
+    }
+
+    const cfg = DATASET_CONFIG[this.activeDatasetKey] || DATASET_CONFIG.soc_logs;
+    const catField = cfg.categoryField || 'category';
+
+    // Group counts by category
+    const counts = {};
+    docs.forEach(d => {
+      const cat = d[catField] || d.category || d.status || 'Other';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const maxCount = Math.max(...entries.map(e => e[1]), 1);
+    const colors = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#f43f5e', '#a855f7', '#38bdf8', '#fb7185'];
+
+    const svgWidth = 560;
+    const svgHeight = 140;
+    const barWidth = Math.min(60, Math.max(28, Math.floor((svgWidth - 60) / entries.length) - 16));
+    const gap = Math.floor((svgWidth - (barWidth * entries.length)) / (entries.length + 1));
+
+    let barsSvg = '';
+    entries.forEach(([cat, count], idx) => {
+      const h = Math.max(6, Math.round((count / maxCount) * 85));
+      const x = gap + idx * (barWidth + gap);
+      const y = 100 - h;
+      const color = colors[idx % colors.length];
+      const pct = Math.round((count / docs.length) * 100);
+
+      barsSvg += `
+        <g class="bar-group" style="cursor: pointer;" title="${cat}: ${count} docs (${pct}%)">
+          <rect x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="4" fill="${color}" opacity="0.85">
+            <animate attributeName="height" from="0" to="${h}" dur="0.3s" fill="freeze" />
+            <animate attributeName="y" from="100" to="${y}" dur="0.3s" fill="freeze" />
+          </rect>
+          <text x="${x + barWidth / 2}" y="${y - 4}" text-anchor="middle" fill="#f8fafc" font-size="10" font-family="monospace" font-weight="700">${count}</text>
+          <text x="${x + barWidth / 2}" y="118" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="sans-serif">${cat.length > 9 ? cat.slice(0, 8) + '..' : cat}</text>
+        </g>
+      `;
+    });
+
+    this.visualChartContainer.innerHTML = `
+      <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <svg viewBox="0 0 ${svgWidth} ${svgHeight}" style="width: 100%; max-height: 140px; overflow: visible;">
+          <line x1="10" y1="100" x2="${svgWidth - 10}" y2="100" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+          ${barsSvg}
+        </svg>
+      </div>
+    `;
+  }
+
+  // 2. LINE GRAPH / TREND
+  renderLineChart(docs, baseline) {
+    if (!this.visualChartContainer) return;
+    const nums = docs.map(d => d[this.anomalyField]).filter(v => typeof v === 'number').sort((a, b) => a - b);
+    if (nums.length === 0) {
+      this.visualChartContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">No numeric values found for field</span>';
+      return;
+    }
+
+    const min = Math.min(...nums);
+    const max = Math.max(...nums);
+    const range = (max - min) || 1;
+    const svgWidth = 560;
+    const svgHeight = 130;
+    const paddingX = 30;
+    const paddingY = 16;
+    const chartW = svgWidth - paddingX * 2;
+    const chartH = svgHeight - paddingY * 2;
+
+    const points = nums.map((val, idx) => {
+      const x = paddingX + (idx / Math.max(1, nums.length - 1)) * chartW;
+      const y = paddingY + chartH - ((val - min) / range) * chartH;
+      return { x: Math.round(x), y: Math.round(y), val };
+    });
+
+    const pathD = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
+    const areaD = `${pathD} L ${points[points.length - 1].x} ${paddingY + chartH} L ${points[0].x} ${paddingY + chartH} Z`;
+
+    // Mean reference line
+    const meanVal = baseline && baseline.mean !== undefined ? baseline.mean : (min + max) / 2;
+    const meanY = Math.round(paddingY + chartH - ((meanVal - min) / range) * chartH);
+
+    const dots = points.map(p => `
+      <circle cx="${p.x}" cy="${p.y}" r="3" fill="#38bdf8" stroke="#0f172a" stroke-width="1.5">
+        <title>Value: ${p.val.toLocaleString()}</title>
+      </circle>
+    `).join('');
+
+    this.visualChartContainer.innerHTML = `
+      <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <svg viewBox="0 0 ${svgWidth} ${svgHeight}" style="width: 100%; max-height: 140px;">
+          <defs>
+            <linearGradient id="lineAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0" />
+            </linearGradient>
+          </defs>
+          <!-- Mean Reference Line -->
+          <line x1="${paddingX}" y1="${meanY}" x2="${paddingX + chartW}" y2="${meanY}" stroke="rgba(99,102,241,0.5)" stroke-dasharray="3,3" stroke-width="1" />
+          <text x="${paddingX + chartW}" y="${meanY - 3}" text-anchor="end" fill="#818cf8" font-size="8" font-family="monospace">&mu; = ${Math.round(meanVal).toLocaleString()}</text>
+
+          <!-- Area & Line -->
+          <path d="${areaD}" fill="url(#lineAreaGrad)" />
+          <path d="${pathD}" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linejoin="round" />
+          ${dots}
+
+          <!-- Labels -->
+          <text x="${paddingX}" y="${svgHeight - 2}" text-anchor="start" fill="#64748b" font-size="8" font-family="monospace">Min: ${min.toLocaleString()}</text>
+          <text x="${paddingX + chartW}" y="${svgHeight - 2}" text-anchor="end" fill="#64748b" font-size="8" font-family="monospace">Max: ${max.toLocaleString()}</text>
+        </svg>
+      </div>
+    `;
+  }
+
+  // 3. PIE / DONUT CHART
+  renderPieChart(docs) {
+    if (!this.visualChartContainer) return;
+    if (docs.length === 0) {
+      this.visualChartContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">No records to display</span>';
+      return;
+    }
+
+    const cfg = DATASET_CONFIG[this.activeDatasetKey] || DATASET_CONFIG.soc_logs;
+    const catField = cfg.categoryField || 'category';
+
+    const counts = {};
+    docs.forEach(d => {
+      const cat = d[catField] || d.category || d.status || 'Other';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const total = docs.length;
+    const colors = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#f43f5e', '#a855f7', '#38bdf8', '#fb7185'];
+
+    const r = 42;
+    const c = 2 * Math.PI * r;
+    let acc = 0;
+
+    const segmentsSvg = entries.map(([cat, count], idx) => {
+      const pct = count / total;
+      const dash = pct * c;
+      const offset = c - acc;
+      acc += dash;
+      const color = colors[idx % colors.length];
+
+      return `<circle cx="70" cy="70" r="${r}" fill="transparent" stroke="${color}" stroke-width="16" stroke-dasharray="${dash} ${c - dash}" stroke-dashoffset="${offset}" transform="rotate(-90 70 70)">
+        <title>${cat}: ${count} docs (${Math.round(pct * 100)}%)</title>
+      </circle>`;
+    }).join('');
+
+    const legendHtml = entries.map(([cat, count], idx) => {
+      const color = colors[idx % colors.length];
+      const pct = Math.round((count / total) * 100);
+      return `
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-secondary);">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${color}; flex-shrink: 0;"></span>
+          <span style="font-weight: 600; color: #f8fafc;">${cat}:</span>
+          <span style="font-family: monospace; color: var(--text-muted);">${count} (${pct}%)</span>
+        </div>
+      `;
+    }).join('');
+
+    this.visualChartContainer.innerHTML = `
+      <div style="width: 100%; display: flex; align-items: center; justify-content: space-around; gap: 16px; flex-wrap: wrap;">
+        <div style="position: relative; width: 140px; height: 140px; flex-shrink: 0;">
+          <svg viewBox="0 0 140 140" style="width: 100%; height: 100%;">
+            ${segmentsSvg}
+          </svg>
+          <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;">
+            <span style="font-size: 0.95rem; font-weight: 800; font-family: monospace; color: #fff;">${total}</span>
+            <span style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Docs</span>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px 14px; flex: 1; max-width: 360px;">
+          ${legendHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  // 4. DOT DISTRIBUTION STRIP
+  renderDotStrip(fullList, hits, anomalyReport) {
+    if (!this.visualChartContainer) return;
     const b = anomalyReport.baseline;
     if (!b || b.n === 0 || b.max === b.min) {
-      this.distributionTrack.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">Insufficient numeric spread in baseline</span>';
+      this.visualChartContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">Insufficient numeric spread in baseline</span>';
       return;
     }
 
@@ -4307,10 +4544,6 @@ class AveLynxPlaygroundApp {
     const minVal = b.min;
     const maxVal = b.max;
     const range = maxVal - minVal || 1;
-
-    if (this.distMinLabel) this.distMinLabel.textContent = cfg.unit === '$' ? ('$' + minVal.toLocaleString()) : (minVal + ' ' + cfg.unit);
-    if (this.distMeanLabel) this.distMeanLabel.textContent = 'μ: ' + (cfg.unit === '$' ? ('$' + Math.round(b.mean).toLocaleString()) : (Math.round(b.mean) + ' ' + cfg.unit));
-    if (this.distMaxLabel) this.distMaxLabel.textContent = cfg.unit === '$' ? ('$' + maxVal.toLocaleString()) : (maxVal + ' ' + cfg.unit);
 
     const hitIdSet = new Set(hits.map(h => h.id || (h.source && h.source.id)));
     const anomalySet = new Set((anomalyReport.anomalies || []).map(a => a.id));
@@ -4323,7 +4556,6 @@ class AveLynxPlaygroundApp {
       const isMatched = hitIdSet.has(docId);
       const isOutlier = anomalySet.has(docId);
 
-      // Check plot scope filtering
       if (this.plotScope === 'hits' && !isMatched) return '';
       if (this.plotScope === 'outliers' && !isOutlier) return '';
 
@@ -4341,10 +4573,28 @@ class AveLynxPlaygroundApp {
     const meanPct = Math.min(98, Math.max(2, ((b.mean - minVal) / range) * 100));
     const meanMarker = `<div class="mean-marker-line" style="left: ${meanPct}%;" title="Baseline Population Mean: ${b.mean}"></div>`;
 
-    this.distributionTrack.innerHTML = dotsHtml + meanMarker;
+    const minLabel = cfg.unit === '$' ? ('$' + minVal.toLocaleString()) : (minVal + ' ' + cfg.unit);
+    const meanLabel = '&mu;: ' + (cfg.unit === '$' ? ('$' + Math.round(b.mean).toLocaleString()) : (Math.round(b.mean) + ' ' + cfg.unit));
+    const maxLabel = cfg.unit === '$' ? ('$' + maxVal.toLocaleString()) : (maxVal + ' ' + cfg.unit);
+
+    this.visualChartContainer.innerHTML = `
+      <div style="width: 100%; display: flex; flex-direction: column;">
+        <div class="distribution-axis-wrap">
+          <div class="distribution-track" title="Hover dot to inspect value">
+            ${meanMarker}
+            ${dotsHtml}
+          </div>
+          <div class="distribution-axis-labels" style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+            <span>${minLabel}</span>
+            <span class="dist-mean-indicator">${meanLabel}</span>
+            <span>${maxLabel}</span>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
-  renderHits(hits, anomalyReport) {
+    renderHits(hits, anomalyReport) {
     if (!this.resultsContainer) return;
 
     if (this.resultsCountLabel) {
