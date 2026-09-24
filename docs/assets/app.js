@@ -19,6 +19,84 @@ function levenshtein(a, b) {
   return dp[m][n];
 }
 
+// SQL & Stretchy Query Execution Filter
+function filterBySqlOrSyntax(fullList, query) {
+  const cleanQ = query.trim();
+
+  // 1. SQL Parser: SELECT * [FROM table] WHERE ...
+  if (/^select\b/i.test(cleanQ)) {
+    const whereMatch = cleanQ.match(/where\s+(.+)$/i);
+    if (!whereMatch) return fullList.map(doc => ({ id: doc.id, score: 1.0, source: doc }));
+
+    const condition = whereMatch[1].trim();
+    const condRegex = /([a-zA-Z0-9_]+)\s*(>=|<=|>|<|=|!=|like)\s*['"]?([^'"\s]+)['"]?/gi;
+    let match;
+    const filters = [];
+    while ((match = condRegex.exec(condition)) !== null) {
+      filters.push({ field: match[1], op: match[2].toLowerCase(), val: match[3] });
+    }
+
+    if (filters.length === 0) return fullList.map(doc => ({ id: doc.id, score: 1.0, source: doc }));
+
+    return fullList.filter(doc => {
+      return filters.every(f => {
+        const docVal = doc[f.field];
+        if (docVal === undefined) return false;
+
+        const numDoc = Number(docVal);
+        const numVal = Number(f.val);
+        const isNum = !isNaN(numDoc) && !isNaN(numVal);
+
+        switch (f.op) {
+          case '>': return isNum ? numDoc > numVal : String(docVal) > f.val;
+          case '>=': return isNum ? numDoc >= numVal : String(docVal) >= f.val;
+          case '<': return isNum ? numDoc < numVal : String(docVal) < f.val;
+          case '<=': return isNum ? numDoc <= numVal : String(docVal) <= f.val;
+          case '=': return String(docVal).toLowerCase() === f.val.toLowerCase();
+          case '!=': return String(docVal).toLowerCase() !== f.val.toLowerCase();
+          case 'like': return String(docVal).toLowerCase().includes(f.val.toLowerCase().replace(/%/g, ''));
+          default: return true;
+        }
+      });
+    }).map(doc => ({ id: doc.id, score: 3.5, source: doc }));
+  }
+
+  // 2. Stretchy Field Syntax: field:>=val, field:>val, field:<=val, field:<val, field:val
+  if (/[a-zA-Z0-9_]+:(>=|<=|>|<|[^,\s]+)/.test(cleanQ)) {
+    const opRegex = /([a-zA-Z0-9_]+):(>=|<=|>|<)?([^,\s]+)/g;
+    let match;
+    const filters = [];
+    while ((match = opRegex.exec(cleanQ)) !== null) {
+      filters.push({ field: match[1], op: match[2] || '=', val: match[3].replace(/['"]/g, '') });
+    }
+
+    if (filters.length > 0) {
+      return fullList.filter(doc => {
+        return filters.every(f => {
+          const docVal = doc[f.field];
+          if (docVal === undefined) return false;
+
+          const numDoc = Number(docVal);
+          const numVal = Number(f.val);
+          const isNum = !isNaN(numDoc) && !isNaN(numVal);
+
+          switch (f.op) {
+            case '>': return isNum ? numDoc > numVal : false;
+            case '>=': return isNum ? numDoc >= numVal : false;
+            case '<': return isNum ? numDoc < numVal : false;
+            case '<=': return isNum ? numDoc <= numVal : false;
+            case '=': return String(docVal).toLowerCase().includes(f.val.toLowerCase());
+            default: return true;
+          }
+        });
+      }).map(doc => ({ id: doc.id, score: 3.0, source: doc }));
+    }
+  }
+
+  return null; // Fall through to standard BM25 / Fuzzy
+}
+
+
 // 1. Built-in High-Fidelity Demo Datasets for Zero-Setup Offline Playground
 const DEMO_DATASETS = {
   products: [
@@ -70,6 +148,7 @@ class AveLynxPlaygroundApp {
     this.initTheme();
     this.initElasticStretch();
     this.initScenarios();
+    this.initSuggestedQueries();
     this.initElasticSlider();
     this.initDocInspector();
     this.bindEvents();
@@ -464,16 +543,11 @@ class AveLynxPlaygroundApp {
     totalDocs = fullList.length;
 
     if (this.activeSource === 'mock') {
-      if (query === '*' || query === '') {
+      const sqlOrSyntaxHits = filterBySqlOrSyntax(fullList, query);
+      if (sqlOrSyntaxHits) {
+        hits = sqlOrSyntaxHits;
+      } else if (query === '*' || query === '') {
         hits = fullList.map(doc => ({ id: doc.id, score: 1.0, source: doc }));
-      } else if (query.includes(':')) {
-        // Field targeting (e.g. category:electronics)
-        const [field, val] = query.split(':');
-        const cleanField = field.trim().toLowerCase();
-        const cleanVal = val.trim().toLowerCase();
-        hits = fullList
-          .filter(doc => String(doc[cleanField] || '').toLowerCase().includes(cleanVal))
-          .map(doc => ({ id: doc.id, score: 2.5, source: doc }));
       } else {
         // BM25 term + Levenshtein fuzzy expansion
         const terms = query.toLowerCase().split(/\s+/);
@@ -643,13 +717,29 @@ class AveLynxPlaygroundApp {
     if (this.statIQR) this.statIQR.textContent = s.iqr !== undefined ? s.iqr.toLocaleString() : '--';
     if (this.statOutliers) this.statOutliers.textContent = report.anomalyCount || '0';
 
+    const anomalyIcon = document.getElementById('anomalyIcon');
+    const anomalyStatBadge = document.getElementById('anomalyStatBadge');
+    const anomalySub = document.getElementById('anomalySub');
+
     if (this.anomalyPill) {
       if (report.anomalyCount > 0) {
         this.anomalyPill.className = 'anomaly-pill detected';
         this.anomalyPill.textContent = report.anomalyCount + ' Outlier(s) Detected';
+        if (anomalyIcon) anomalyIcon.textContent = '🚨';
+        if (anomalyStatBadge) {
+          anomalyStatBadge.className = 'tc-badge anomaly-stat-badge';
+          anomalyStatBadge.textContent = 'Z >= 2.2σ';
+        }
+        if (anomalySub) anomalySub.textContent = 'MAD Statistical Profiler';
       } else {
         this.anomalyPill.className = 'anomaly-pill clean';
         this.anomalyPill.textContent = 'Normal Distribution';
+        if (anomalyIcon) anomalyIcon.textContent = '✓';
+        if (anomalyStatBadge) {
+          anomalyStatBadge.className = 'tc-badge sub15-badge';
+          anomalyStatBadge.textContent = 'Clean / 0 Outliers';
+        }
+        if (anomalySub) anomalySub.textContent = 'Within Normal Bounds';
       }
     }
   }

@@ -161,7 +161,7 @@
               <label class="qb-label" for="queryInput">Search Query</label>
               <div class="query-input-wrapper">
                 <svg class="query-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="queryInput" class="query-input" placeholder="Search term or '*' for all..." value="*">
+                <input type="text" id="queryInput" class="query-input" placeholder="Type a search query or SQL..." value="*">
               </div>
 
               <!-- Quick Query Mode Pills -->
@@ -169,6 +169,69 @@
                 <button type="button" class="mode-pill active" data-mode-query="*">All (*)</button>
                 <button type="button" class="mode-pill" data-mode-query="category:electronics">Field: electronics</button>
                 <button type="button" class="mode-pill" data-mode-query="noiz canclling">Fuzzy: noiz</button>
+              </div>
+            </div>
+
+            <!-- Suggested Queries to Run (Natural Language + SQL / Stretchy Language) -->
+            <div class="qb-group suggested-queries-group">
+              <div class="qb-label-row">
+                <label class="qb-label">💡 Suggested Queries</label>
+                <div class="sq-tabs-nav" id="sqTabsNav">
+                  <button type="button" class="sq-tab-btn active" data-sq-tab="nl">Natural Language</button>
+                  <button type="button" class="sq-tab-btn" data-sq-tab="syntax">SQL &amp; Stretchy</button>
+                </div>
+              </div>
+
+              <!-- Natural Language Queries -->
+              <div class="sq-tab-pane active" id="sqTabNl">
+                <div class="suggested-queries-list">
+                  <button type="button" class="suggested-query-item" data-dataset="soc_logs" data-query="exfiltration probe burst" title="Click to execute Natural Language query">
+                    <span class="sqi-badge nl-badge">NL</span>
+                    <span class="sqi-text">"Detect security exfiltration burst over 500ms"</span>
+                    <span class="sqi-dataset-tag">SOC</span>
+                  </button>
+                  <button type="button" class="suggested-query-item" data-dataset="grants" data-query="statewide infrastructure capital" title="Click to execute Natural Language query">
+                    <span class="sqi-badge nl-badge">NL</span>
+                    <span class="sqi-text">"High-value government capital grant anomalies"</span>
+                    <span class="sqi-dataset-tag">Grants</span>
+                  </button>
+                  <button type="button" class="suggested-query-item" data-dataset="products" data-query="wireless noise cancelling headphones" title="Click to execute Natural Language query">
+                    <span class="sqi-badge nl-badge">NL</span>
+                    <span class="sqi-text">"Wireless noise-cancelling headphones"</span>
+                    <span class="sqi-dataset-tag">Products</span>
+                  </button>
+                  <button type="button" class="suggested-query-item" data-dataset="soc_logs" data-query="iam-auth login success" title="Click to execute Natural Language query">
+                    <span class="sqi-badge nl-badge">NL</span>
+                    <span class="sqi-text">"Find IAM auth success telemetry logs"</span>
+                    <span class="sqi-dataset-tag">SOC</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- SQL & Stretchy Syntax Queries -->
+              <div class="sq-tab-pane" id="sqTabSyntax" style="display: none;">
+                <div class="suggested-queries-list">
+                  <button type="button" class="suggested-query-item syntax-item" data-dataset="soc_logs" data-query="SELECT * FROM soc_logs WHERE latency_ms > 500" title="Click to execute SQL query">
+                    <span class="sqi-badge sql-badge">SQL</span>
+                    <code class="sqi-code">SELECT * WHERE latency_ms &gt; 500</code>
+                    <span class="sqi-dataset-tag">SOC</span>
+                  </button>
+                  <button type="button" class="suggested-query-item syntax-item" data-dataset="grants" data-query="SELECT * FROM grants WHERE amount >= 100000" title="Click to execute SQL query">
+                    <span class="sqi-badge sql-badge">SQL</span>
+                    <code class="sqi-code">SELECT * WHERE amount &gt;= 100000</code>
+                    <span class="sqi-dataset-tag">Grants</span>
+                  </button>
+                  <button type="button" class="suggested-query-item syntax-item" data-dataset="products" data-query="category:electronics price:<=250" title="Click to execute Stretchy field operator syntax">
+                    <span class="sqi-badge stretchy-badge">SYNTAX</span>
+                    <code class="sqi-code">category:electronics price:&lt;=250</code>
+                    <span class="sqi-dataset-tag">Products</span>
+                  </button>
+                  <button type="button" class="suggested-query-item syntax-item" data-dataset="soc_logs" data-query="service:gateway threat_score:>=90" title="Click to execute Stretchy field operator syntax">
+                    <span class="sqi-badge stretchy-badge">SYNTAX</span>
+                    <code class="sqi-code">service:gateway threat_score:&gt;=90</code>
+                    <span class="sqi-dataset-tag">SOC</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -261,27 +324,42 @@
 
           <!-- RIGHT PANE: LIVE RESULTS & TIMING -->
           <main class="workbench-main results-timing-pane">
-            <!-- PROMINENT EXECUTION TIMING & PERFORMANCE BAR -->
+            <!-- PROMINENT EXECUTION TIMING & PERFORMANCE BAR (Symmetrically Aligned Grid) -->
             <div class="timing-header-bar">
-              <div class="timing-stat-pill execution-time-pill">
-                <div class="timing-icon">⚡</div>
-                <div class="timing-details">
-                  <span class="timing-label">Execution Timing</span>
-                  <span class="timing-value" id="executionTimeVal">11 ms</span>
+              <div class="timing-card execution-time-card">
+                <div class="tc-top">
+                  <span class="tc-icon">⚡</span>
+                  <span class="tc-label">Execution Timing</span>
+                  <span class="timing-badge-tag sub15-badge" id="timingBadge">Sub-15ms Edge Cache</span>
                 </div>
-                <span class="timing-badge-tag sub15-badge" id="timingBadge">Sub-15ms Edge Cache</span>
-              </div>
-
-              <div class="timing-stat-pill slice-pill">
-                <div class="timing-icon">📊</div>
-                <div class="timing-details">
-                  <span class="timing-label" id="slicerLabel">Slice: 100% of Dataset</span>
-                  <span class="timing-value" id="slicerStats">8 / 8 docs</span>
+                <div class="tc-bottom">
+                  <span class="tc-value" id="executionTimeVal">11 ms</span>
+                  <span class="tc-sub">Distributed BM25 Edge</span>
                 </div>
               </div>
 
-              <div class="timing-stat-pill anomaly-pill-box">
-                <div id="anomalyPill" class="anomaly-pill detected">1 Outlier Detected</div>
+              <div class="timing-card slice-card">
+                <div class="tc-top">
+                  <span class="tc-icon">📊</span>
+                  <span class="tc-label" id="slicerLabel">Slice: 100% of Dataset</span>
+                  <span class="tc-badge" id="slicerBadge">Active Window</span>
+                </div>
+                <div class="tc-bottom">
+                  <span class="tc-value" id="slicerStats">8 / 8 docs</span>
+                  <span class="tc-sub">Matched Query Cut</span>
+                </div>
+              </div>
+
+              <div class="timing-card anomaly-card">
+                <div class="tc-top">
+                  <span class="tc-icon" id="anomalyIcon">🚨</span>
+                  <span class="tc-label">Anomaly Status</span>
+                  <span class="tc-badge anomaly-stat-badge" id="anomalyStatBadge">Z &ge; 2.2&sigma;</span>
+                </div>
+                <div class="tc-bottom">
+                  <div id="anomalyPill" class="anomaly-pill detected">1 Outlier Detected</div>
+                  <span class="tc-sub" id="anomalySub">MAD Statistical Profiler</span>
+                </div>
               </div>
             </div>
 
