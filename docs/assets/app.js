@@ -3991,3 +3991,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+
+window.toggleProfilerDrawer = function() {
+  const drawer = document.getElementById('profilerDetailsDrawer');
+  const chevron = document.getElementById('profilerChevronIcon');
+  if (!drawer) return;
+  const isHidden = drawer.style.display === 'none' || drawer.style.display === '';
+  drawer.style.display = isHidden ? 'block' : 'none';
+  if (chevron) {
+    chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
+};

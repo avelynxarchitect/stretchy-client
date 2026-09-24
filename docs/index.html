@@ -21,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="assets/styles.css?v=3.5.0">
+  <link rel="stylesheet" href="assets/styles.css?v=3.6.0">
 
   <!-- Stretchy Client UMD Bundle -->
   <script src="assets/stretchy.umd.js"></script>
@@ -157,26 +157,17 @@
       </div>
 
       <div class="playground-card">
-        <!-- Educational Guided Intro Banner -->
-        <div class="playground-guided-banner">
-          <div class="guided-banner-icon">💡</div>
-          <div class="guided-banner-content">
-            <strong>Interactive Search Workbench:</strong>
-            Configure queries, choose isolated datasets, and set dynamic cut ceilings above. Inspect real-time <strong>BM25 relevance hits</strong> on the left, and view the live <strong>engine response terminal &amp; speed telemetry</strong> on the right.
-          </div>
-        </div>
-
         <!-- Toolbar -->
-        <div class="playground-toolbar">
-          <div class="playground-source-selector">
-            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary)">Backend:</span>
-            <select id="sourceSelect" class="select-input">
+        <div class="playground-toolbar" style="padding: 10px 20px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+          <div class="playground-source-selector" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary)">Backend:</span>
+            <select id="sourceSelect" class="select-input" style="padding: 4px 8px; font-size: 0.8rem;">
               <option value="live" selected>Live Stretchy D1 Engine (workers.dev)</option>
               <option value="mock">In-Memory Mock Sandbox</option>
             </select>
 
-            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-left: 8px;">Dataset:</span>
-            <select id="datasetSelect" class="select-input" onchange="window.app && window.app.onDatasetChange(this.value)">
+            <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-left: 6px;">Dataset:</span>
+            <select id="datasetSelect" class="select-input" style="padding: 4px 8px; font-size: 0.8rem;" onchange="window.app && window.app.onDatasetChange(this.value)">
               <option value="soc_logs" selected>Cybersecurity SOC Telemetry (64 logs)</option>
               <option value="demo_cyber_threats">Global Cyber Threat Telemetry (15 nodes)</option>
               <option value="demo_ecommerce_bi">Global E-Commerce Revenue BI (20 hubs)</option>
@@ -184,135 +175,145 @@
             </select>
           </div>
 
-          <div style="font-size: 0.825rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
-            <span class="pulse-dot" style="background: var(--accent-emerald);"></span>
-            <span>Live Stretchy D1 Active</span>
+          <div style="font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+            <span class="pulse-dot" style="background: var(--accent-emerald); width: 7px; height: 7px;"></span>
+            <span style="color: var(--accent-emerald); font-weight: 600;">Live Stretchy D1 Active</span>
           </div>
         </div>
 
         <!-- Query Input Bar -->
-        <div class="playground-query-bar">
+        <div class="playground-query-bar" style="padding: 12px 20px 8px;">
           <div class="query-input-wrapper">
             <svg class="query-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="queryInput" class="query-input" placeholder="Type a search query or syntax (e.g. 'exfiltration', 'threat_score:[80 TO 100]', or '*' for all)..." value="exfiltration">
           </div>
-          <button id="searchBtn" class="btn btn-primary" style="padding: 14px 24px;">Execute Query</button>
+          <button id="searchBtn" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.875rem;">Execute Query</button>
         </div>
 
-        <!-- Suggested Example Queries Bar -->
-        <div style="padding: 0 24px 16px;">
-          <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.05em;">SUGGESTED QUERIES (CLICK TO RUN):</div>
+        <!-- Suggested Example Queries Bar (Compact Inline Pill Chips) -->
+        <div style="padding: 4px 20px 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap;">Try Query:</span>
           <div class="tqq-chips">
             <button type="button" class="tqq-chip active" data-dataset="soc_logs" data-query="exfiltration" onclick="window.app && window.app.selectSuggestedQuery(this)">
               <span class="tqq-tag soc">SOC</span>
-              <span class="tqq-text">🚨 Threat Egress ("exfiltration")</span>
+              <span class="tqq-text">&#128737;&#65039; Threat Egress ("exfiltration")</span>
             </button>
             <button type="button" class="tqq-chip" data-dataset="soc_logs" data-query="CRITICAL" onclick="window.app && window.app.selectSuggestedQuery(this)">
               <span class="tqq-tag soc">WAF</span>
-              <span class="tqq-text">🛡️ Critical WAF Events ("CRITICAL")</span>
+              <span class="tqq-text">&#9889; Critical WAF Events ("CRITICAL")</span>
             </button>
             <button type="button" class="tqq-chip" data-dataset="demo_cyber_threats" data-query="threat_score:[80 TO 100]" onclick="window.app && window.app.selectSuggestedQuery(this)">
               <span class="tqq-tag prod">THREAT</span>
-              <span class="tqq-text">⚡ High Threat Outliers (score &ge; 80)</span>
+              <span class="tqq-text">&#128293; High Threat Outliers (&ge; 80)</span>
             </button>
             <button type="button" class="tqq-chip" data-dataset="demo_cyber_threats" data-query="latency_ms:[150 TO 300]" onclick="window.app && window.app.selectSuggestedQuery(this)">
               <span class="tqq-tag prod">LATENCY</span>
-              <span class="tqq-text">📡 Edge Latency Range [150 TO 300ms]</span>
+              <span class="tqq-text">&#128225; Latency Range [150 TO 300ms]</span>
             </button>
             <button type="button" class="tqq-chip" data-dataset="demo_ecommerce_bi" data-query="gross_revenue:[500000 TO 1500000]" onclick="window.app && window.app.selectSuggestedQuery(this)">
               <span class="tqq-tag prod">BI</span>
-              <span class="tqq-text">💼 Top Revenue Hubs ($500k - $1.5M)</span>
+              <span class="tqq-text">&#128176; Revenue Hubs ($500k - $1.5M)</span>
             </button>
             <button type="button" class="tqq-chip" data-dataset="demo_grant_portfolio" data-query="amount_awarded:[250000 TO 1200000]" onclick="window.app && window.app.selectSuggestedQuery(this)">
               <span class="tqq-tag grant">GRANT</span>
-              <span class="tqq-text">💰 High Impact Awards (&ge; $250k)</span>
+              <span class="tqq-text">&#127963;&#65039; High Impact Awards (&ge; $250k)</span>
             </button>
           </div>
         </div>
 
-        <!-- Query Slicer Dynamic Gauge -->
-        <div class="slicer-panel">
-          <div class="slicer-header">
-            <span id="slicerLabel" class="slicer-label">Slice: 100% of Dataset</span>
-            <span id="slicerStats" class="slicer-stats">2 / 64 documents</span>
+        <!-- Query Slicer Dynamic Gauge (Ultra-slim precision bar) -->
+        <div class="slicer-panel" style="padding: 0 20px 8px;">
+          <div class="slicer-header" style="margin-bottom: 4px; font-size: 0.76rem;">
+            <span id="slicerLabel" class="slicer-label" style="font-weight: 600; color: var(--text-secondary);">Slice: 100% of Dataset</span>
+            <span id="slicerStats" class="slicer-stats" style="font-size: 0.72rem; color: var(--text-muted);">2 / 64 documents</span>
           </div>
-          <div class="slicer-track">
-            <div id="slicerFill" class="slicer-fill" style="width: 100%;"></div>
+          <div class="slicer-track" style="height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px;">
+            <div id="slicerFill" class="slicer-fill" style="width: 100%; height: 100%;"></div>
           </div>
         </div>
 
-        <!-- Probabilistic Anomaly Detector Widget -->
-        <div class="anomaly-widget">
-          <div class="anomaly-header">
-            <div class="anomaly-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-indigo)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <!-- Probabilistic Anomaly Detector Widget (Compact Ribbon with Expandable Drawer) -->
+        <div class="anomaly-widget" style="margin: 0 20px 14px; padding: 10px 14px;">
+          <div class="anomaly-header" style="margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div class="anomaly-title" style="display: flex; align-items: center; gap: 8px; font-size: 0.825rem; font-weight: 600;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-indigo)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
               <span>Probabilistic Statistical Profiling Engine</span>
+              <div id="anomalyPill" class="anomaly-pill clean" style="font-size: 0.68rem; padding: 1px 7px;">Normal Distribution</div>
             </div>
-            <div id="anomalyPill" class="anomaly-pill clean">Normal Distribution</div>
+
+            <!-- Drawer Toggle Button -->
+            <button id="profilerToggleDetailsBtn" type="button" class="btn btn-secondary" style="padding: 3px 9px; font-size: 0.72rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;" onclick="window.toggleProfilerDrawer && window.toggleProfilerDrawer()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              <span id="profilerToggleLabel">Visual Plot &amp; Cut Filter</span>
+              <svg id="profilerChevronIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s ease;"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
           </div>
 
-          <div class="stat-chips-grid">
-            <div class="stat-chip">
-              <div class="stat-chip-label">Population (N)</div>
-              <div id="statPopN" class="stat-chip-value">64 docs</div>
+          <!-- Compact 1-Row Stat Chips Strip -->
+          <div class="stat-chips-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;">
+            <div class="stat-chip" style="padding: 5px 8px; border-radius: 4px;">
+              <div class="stat-chip-label" style="font-size: 0.65rem;">Population (N)</div>
+              <div id="statPopN" class="stat-chip-value" style="font-size: 0.8rem;">64 docs</div>
             </div>
-            <div class="stat-chip">
-              <div class="stat-chip-label">Mean (&mu;)</div>
-              <div id="statMean" class="stat-chip-value">--</div>
+            <div class="stat-chip" style="padding: 5px 8px; border-radius: 4px;">
+              <div class="stat-chip-label" style="font-size: 0.65rem;">Mean (&mu;)</div>
+              <div id="statMean" class="stat-chip-value" style="font-size: 0.8rem;">--</div>
             </div>
-            <div class="stat-chip">
-              <div class="stat-chip-label">StdDev (&sigma;)</div>
-              <div id="statStdDev" class="stat-chip-value">--</div>
+            <div class="stat-chip" style="padding: 5px 8px; border-radius: 4px;">
+              <div class="stat-chip-label" style="font-size: 0.65rem;">StdDev (&sigma;)</div>
+              <div id="statStdDev" class="stat-chip-value" style="font-size: 0.8rem;">--</div>
             </div>
-            <div class="stat-chip">
-              <div class="stat-chip-label">Median (p50)</div>
-              <div id="statMedian" class="stat-chip-value">--</div>
+            <div class="stat-chip" style="padding: 5px 8px; border-radius: 4px;">
+              <div class="stat-chip-label" style="font-size: 0.65rem;">Median (p50)</div>
+              <div id="statMedian" class="stat-chip-value" style="font-size: 0.8rem;">--</div>
             </div>
-            <div class="stat-chip">
-              <div class="stat-chip-label">IQR (Q3-Q1)</div>
-              <div id="statIQR" class="stat-chip-value">--</div>
+            <div class="stat-chip" style="padding: 5px 8px; border-radius: 4px;">
+              <div class="stat-chip-label" style="font-size: 0.65rem;">IQR (Q3-Q1)</div>
+              <div id="statIQR" class="stat-chip-value" style="font-size: 0.8rem;">--</div>
             </div>
-            <div class="stat-chip">
-              <div class="stat-chip-label">Outliers (z &ge; 2.2)</div>
-              <div id="statOutliers" class="stat-chip-value" style="color: var(--accent-rose)">0</div>
+            <div class="stat-chip" style="padding: 5px 8px; border-radius: 4px;">
+              <div class="stat-chip-label" style="font-size: 0.65rem;">Outliers (z &ge; 2.2)</div>
+              <div id="statOutliers" class="stat-chip-value" style="color: var(--accent-rose); font-size: 0.8rem;">0</div>
             </div>
           </div>
 
-          <!-- Visual Distribution Strip -->
-          <div class="distribution-strip-container">
-            <div class="distribution-strip-header">
-              <span class="distribution-strip-title">Visual Metric Distribution Plot</span>
-              <span class="distribution-strip-legend">
-                <span class="dot-legend-item"><span class="legend-dot normal"></span> Normal Items</span>
-                <span class="dot-legend-item"><span class="legend-dot outlier"></span> Statistical Outlier (z &ge; 2.2)</span>
-              </span>
-            </div>
-            <div class="distribution-axis-wrap">
-              <div id="distributionTrack" class="distribution-track" title="Click any data point to highlight that document">
-                <!-- Dynamically populated with interactive glowing dots -->
+          <!-- Collapsible Drawer: Visual Distribution Strip & Elastic Ceiling Range Filter -->
+          <div id="profilerDetailsDrawer" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-subtle);">
+            <!-- Visual Distribution Strip -->
+            <div class="distribution-strip-container" style="margin-top: 0; padding-top: 0; border-top: none;">
+              <div class="distribution-strip-header" style="margin-bottom: 6px; font-size: 0.75rem;">
+                <span class="distribution-strip-title" style="font-weight: 600;">Visual Metric Distribution Plot</span>
+                <span class="distribution-strip-legend" style="gap: 10px; font-size: 0.72rem;">
+                  <span class="dot-legend-item"><span class="legend-dot normal"></span> Normal Items</span>
+                  <span class="dot-legend-item"><span class="legend-dot outlier"></span> Statistical Outlier (z &ge; 2.2)</span>
+                </span>
               </div>
-              <div class="distribution-axis-labels">
-                <span id="distMinLabel">0</span>
-                <span id="distMeanLabel" class="dist-mean-indicator">&mu; (Mean)</span>
-                <span id="distMaxLabel">Max</span>
+              <div class="distribution-axis-wrap">
+                <div id="distributionTrack" class="distribution-track" title="Click any data point to highlight that document">
+                  <!-- Dynamically populated with interactive glowing dots -->
+                </div>
+                <div class="distribution-axis-labels" style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+                  <span id="distMinLabel">0</span>
+                  <span id="distMeanLabel" class="dist-mean-indicator">&mu; (Mean)</span>
+                  <span id="distMaxLabel">Max</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Elastic Ceiling Range Filter -->
-          <div class="elastic-slider-bar">
-            <div class="elastic-slider-info">
-              <span class="slider-title">Dynamic Elastic Cut Filter:</span>
-              <span id="sliderValueLabel" class="slider-value">Showing all records (No ceiling cap)</span>
-            </div>
-            <div class="elastic-slider-control">
-              <input type="range" id="elasticCeilingSlider" min="10" max="100" value="100" class="elastic-range-input">
-              <button id="sliderResetBtn" class="slider-reset-btn" type="button" title="Reset ceiling filter">Reset</button>
+            <!-- Elastic Ceiling Range Filter -->
+            <div class="elastic-slider-bar" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.04);">
+              <div class="elastic-slider-info" style="font-size: 0.75rem;">
+                <span class="slider-title" style="color: var(--text-secondary); font-weight: 600;">Dynamic Elastic Cut Filter:</span>
+                <span id="sliderValueLabel" class="slider-value" style="font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 600;">Showing all records (No ceiling cap)</span>
+              </div>
+              <div class="elastic-slider-control">
+                <input type="range" id="elasticCeilingSlider" min="10" max="100" value="100" class="elastic-range-input">
+                <button id="sliderResetBtn" class="slider-reset-btn" type="button" title="Reset ceiling filter" style="padding: 2px 8px; font-size: 0.72rem;">Reset</button>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Results Grid (Left) & Terminal Window (Right) -->
         <div class="playground-body">
           <!-- LEFT PANE: RESULTS -->
           <div class="results-pane">
@@ -617,7 +618,7 @@
   </footer>
 
   <!-- Application Logic -->
-  <script src="assets/app.js?v=3.5.0"></script>
+  <script src="assets/app.js?v=3.6.0"></script>
 
   <!-- Document Inspector Modal -->
   <div id="docInspectorModal" class="inspector-modal" style="display: none;">
