@@ -21,10 +21,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="assets/styles.css?v=2.1.0">
+  <link rel="stylesheet" href="assets/styles.css?v=2.2.0">
 
   <!-- Stretchy Client UMD Bundle -->
   <script src="assets/stretchy.umd.js"></script>
+
+  <script>
+    window.closeInspectorModal = function() {
+      var m = document.getElementById('docInspectorModal');
+      if (m) m.style.display = 'none';
+    };
+    window.closeSdkModal = function() {
+      var m = document.getElementById('sdkCodeModal');
+      if (m) m.style.display = 'none';
+    };
+    window.openSdkModal = function() {
+      var m = document.getElementById('sdkCodeModal');
+      if (m) m.style.display = 'flex';
+    };
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        window.closeInspectorModal();
+        window.closeSdkModal();
+      }
+    });
+  </script>
+
 </head>
 <body>
 
@@ -185,22 +207,22 @@
               <!-- Natural Language Tab -->
               <div class="sq-tab-pane active" id="sqTabNl">
                 <div class="suggested-queries-list">
-                  <button type="button" class="suggested-query-item active" data-dataset="soc_logs" data-query="exfiltration probe burst" title="Click to run in SOC Telemetry">
+                  <button type="button" class="suggested-query-item active" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="soc_logs" data-query="exfiltration probe burst" title="Click to run in SOC Telemetry">
                     <span class="sqi-badge nl-badge">NL</span>
                     <span class="sqi-text">"Detect security exfiltration burst over 500ms"</span>
                     <span class="sqi-dataset-tag">SOC</span>
                   </button>
-                  <button type="button" class="suggested-query-item" data-dataset="grants" data-query="statewide infrastructure capital" title="Click to run in Grants">
+                  <button type="button" class="suggested-query-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="grants" data-query="statewide infrastructure capital" title="Click to run in Grants">
                     <span class="sqi-badge nl-badge">NL</span>
                     <span class="sqi-text">"High-value government capital grant anomalies"</span>
                     <span class="sqi-dataset-tag">Grants</span>
                   </button>
-                  <button type="button" class="suggested-query-item" data-dataset="products" data-query="wireless noise cancelling headphones" title="Click to run in Products">
+                  <button type="button" class="suggested-query-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="products" data-query="wireless noise cancelling headphones" title="Click to run in Products">
                     <span class="sqi-badge nl-badge">NL</span>
                     <span class="sqi-text">"Wireless noise-cancelling headphones"</span>
                     <span class="sqi-dataset-tag">Products</span>
                   </button>
-                  <button type="button" class="suggested-query-item" data-dataset="soc_logs" data-query="iam-auth login success" title="Click to run in SOC Telemetry">
+                  <button type="button" class="suggested-query-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="soc_logs" data-query="iam-auth login success" title="Click to run in SOC Telemetry">
                     <span class="sqi-badge nl-badge">NL</span>
                     <span class="sqi-text">"Find IAM auth success telemetry logs"</span>
                     <span class="sqi-dataset-tag">SOC</span>
@@ -211,22 +233,22 @@
               <!-- SQL & Stretchy Syntax Tab -->
               <div class="sq-tab-pane" id="sqTabSyntax" style="display: none;">
                 <div class="suggested-queries-list">
-                  <button type="button" class="suggested-query-item syntax-item" data-dataset="soc_logs" data-query="SELECT * FROM soc_logs WHERE latency_ms > 500" title="Click to run SQL query">
+                  <button type="button" class="suggested-query-item syntax-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="soc_logs" data-query="SELECT * FROM soc_logs WHERE latency_ms > 500" title="Click to run SQL query">
                     <span class="sqi-badge sql-badge">SQL</span>
                     <code class="sqi-code">SELECT * WHERE latency_ms &gt; 500</code>
                     <span class="sqi-dataset-tag">SOC</span>
                   </button>
-                  <button type="button" class="suggested-query-item syntax-item" data-dataset="grants" data-query="SELECT * FROM grants WHERE amount >= 100000" title="Click to run SQL query">
+                  <button type="button" class="suggested-query-item syntax-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="grants" data-query="SELECT * FROM grants WHERE amount >= 100000" title="Click to run SQL query">
                     <span class="sqi-badge sql-badge">SQL</span>
                     <code class="sqi-code">SELECT * WHERE amount &gt;= 100000</code>
                     <span class="sqi-dataset-tag">Grants</span>
                   </button>
-                  <button type="button" class="suggested-query-item syntax-item" data-dataset="products" data-query="category:electronics price:<=250" title="Click to run Stretchy syntax">
+                  <button type="button" class="suggested-query-item syntax-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="products" data-query="category:electronics price:<=250" title="Click to run Stretchy syntax">
                     <span class="sqi-badge stretchy-badge">SYNTAX</span>
                     <code class="sqi-code">category:electronics price:&lt;=250</code>
                     <span class="sqi-dataset-tag">Products</span>
                   </button>
-                  <button type="button" class="suggested-query-item syntax-item" data-dataset="soc_logs" data-query="service:gateway threat_score:>=90" title="Click to run Stretchy syntax">
+                  <button type="button" class="suggested-query-item syntax-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="soc_logs" data-query="service:gateway threat_score:>=90" title="Click to run Stretchy syntax">
                     <span class="sqi-badge stretchy-badge">SYNTAX</span>
                     <code class="sqi-code">service:gateway threat_score:&gt;=90</code>
                     <span class="sqi-dataset-tag">SOC</span>
@@ -238,7 +260,7 @@
             <!-- 3. Target Dataset Selector -->
             <div class="qb-group">
               <label class="qb-label" for="datasetSelect">Target Index / Dataset</label>
-              <select id="datasetSelect" class="select-input full-width">
+              <select id="datasetSelect" class="select-input full-width" onchange="window.app && window.app.onDatasetChange(this.value)">
                 <option value="soc_logs" selected>Cybersecurity SOC Telemetry (8 logs)</option>
                 <option value="products">E-Commerce Products (12 items)</option>
                 <option value="grants">Grant &amp; Tax Documents (4 items)</option>
@@ -635,18 +657,18 @@
   </footer>
 
   <!-- Application Logic -->
-  <script src="assets/app.js?v=2.1.0"></script>
+  <script src="assets/app.js?v=2.2.0"></script>
 
   <!-- Document Inspector Modal -->
   <div id="docInspectorModal" class="inspector-modal" style="display: none;">
-    <div class="inspector-modal-backdrop" id="docInspectorBackdrop"></div>
+    <div class="inspector-modal-backdrop" id="docInspectorBackdrop" onclick="window.closeInspectorModal()"></div>
     <div class="inspector-modal-content">
       <div class="inspector-header">
         <div class="inspector-title-wrap">
           <span class="inspector-badge" id="inspectorBadge">Document</span>
           <h3 class="inspector-doc-title" id="inspectorDocTitle">Document Title</h3>
         </div>
-        <button class="inspector-close-btn" id="inspectorCloseBtn" aria-label="Close Inspector">&times;</button>
+        <button class="inspector-close-btn" id="inspectorCloseBtn" onclick="window.closeInspectorModal()" aria-label="Close Inspector">&times;</button>
       </div>
       <div class="inspector-body">
         <div class="inspector-stats-row">
@@ -672,7 +694,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copy JSON Payload
         </button>
-        <button class="btn btn-primary" id="inspectorDoneBtn">Close</button>
+        <button class="btn btn-primary" id="inspectorDoneBtn" onclick="window.closeInspectorModal()">Close</button>
       </div>
     </div>
   </div>
@@ -680,14 +702,14 @@
 
   <!-- SDK Code Inspector Modal -->
   <div id="sdkCodeModal" class="inspector-modal" style="display: none;">
-    <div class="inspector-modal-backdrop" id="sdkCodeBackdrop"></div>
+    <div class="inspector-modal-backdrop" id="sdkCodeBackdrop" onclick="window.closeSdkModal()"></div>
     <div class="inspector-modal-content" style="max-width: 720px;">
       <div class="inspector-header">
         <div class="inspector-title-wrap">
           <span class="inspector-badge" style="background: var(--accent-indigo); color: white;">SDK Implementation</span>
           <h3 class="inspector-doc-title">Generated Client SDK Code</h3>
         </div>
-        <button class="inspector-close-btn" id="sdkCodeCloseBtn" aria-label="Close Code View">&times;</button>
+        <button class="inspector-close-btn" id="sdkCodeCloseBtn" onclick="window.closeSdkModal()" aria-label="Close Code View">&times;</button>
       </div>
       <div class="inspector-body">
         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">
@@ -700,7 +722,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copy SDK Code
         </button>
-        <button class="btn btn-primary" id="sdkCodeDoneBtn">Done</button>
+        <button class="btn btn-primary" id="sdkCodeDoneBtn" onclick="window.closeSdkModal()">Done</button>
       </div>
     </div>
   </div>

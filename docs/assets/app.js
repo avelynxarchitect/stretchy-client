@@ -385,6 +385,45 @@ class AveLynxPlaygroundApp {
 
   // Elastic Ceiling Slider
 
+
+  onDatasetChange(newDataset) {
+    this.activeDatasetKey = newDataset;
+    this.anomalyField = this.activeDatasetKey === 'soc_logs' ? 'latency_ms' :
+                        (this.activeDatasetKey === 'grants' ? 'amount' : 'price');
+    if (this.datasetSelect && this.datasetSelect.value !== newDataset) {
+      this.datasetSelect.value = newDataset;
+    }
+    this.ceilingFilter = 100;
+    if (this.elasticCeilingSlider) this.elasticCeilingSlider.value = 100;
+    if (this.sliderValueLabel) this.sliderValueLabel.textContent = 'Showing all records (No ceiling cap)';
+    this.runSearch();
+  }
+
+  selectSuggestedQuery(el) {
+    const dataset = el.getAttribute('data-dataset');
+    const query = el.getAttribute('data-query');
+
+    document.querySelectorAll('.suggested-query-item').forEach(btn => btn.classList.remove('active'));
+    el.classList.add('active');
+
+    if (dataset) {
+      this.activeDatasetKey = dataset;
+      this.anomalyField = this.activeDatasetKey === 'soc_logs' ? 'latency_ms' :
+                          (this.activeDatasetKey === 'grants' ? 'amount' : 'price');
+      if (this.datasetSelect) this.datasetSelect.value = dataset;
+    }
+
+    if (query && this.queryInput) {
+      this.queryInput.value = query;
+    }
+
+    this.ceilingFilter = 100;
+    if (this.elasticCeilingSlider) this.elasticCeilingSlider.value = 100;
+    if (this.sliderValueLabel) this.sliderValueLabel.textContent = 'Showing all records (No ceiling cap)';
+
+    this.runSearch();
+  }
+
   initSuggestedQueries() {
     // 1. Tab Switching between Natural Language and SQL/Syntax
     const tabBtns = document.querySelectorAll('.sq-tab-btn');
@@ -941,4 +980,24 @@ class AveLynxPlaygroundApp {
 // 3. Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   window.app = new AveLynxPlaygroundApp();
+});
+
+
+window.closeInspectorModal = function() {
+  const m = document.getElementById('docInspectorModal');
+  if (m) m.style.display = 'none';
+};
+window.closeSdkModal = function() {
+  const m = document.getElementById('sdkCodeModal');
+  if (m) m.style.display = 'none';
+};
+window.openSdkModal = function() {
+  const m = document.getElementById('sdkCodeModal');
+  if (m) m.style.display = 'flex';
+};
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    window.closeInspectorModal();
+    window.closeSdkModal();
+  }
 });
