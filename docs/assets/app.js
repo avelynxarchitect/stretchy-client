@@ -384,6 +384,61 @@ class AveLynxPlaygroundApp {
   }
 
   // Elastic Ceiling Slider
+
+  initSuggestedQueries() {
+    // 1. Tab Switching between Natural Language and SQL/Syntax
+    const tabBtns = document.querySelectorAll('.sq-tab-btn');
+    const nlPane = document.getElementById('sqTabNl');
+    const syntaxPane = document.getElementById('sqTabSyntax');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.getAttribute('data-sq-tab');
+        if (tab === 'nl') {
+          if (nlPane) nlPane.style.display = 'block';
+          if (syntaxPane) syntaxPane.style.display = 'none';
+        } else {
+          if (nlPane) nlPane.style.display = 'none';
+          if (syntaxPane) syntaxPane.style.display = 'block';
+        }
+      });
+    });
+
+    // 2. Query Item Click Execution
+    const queryItems = document.querySelectorAll('.suggested-query-item');
+    queryItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        queryItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+
+        const targetDataset = item.getAttribute('data-dataset');
+        const targetQuery = item.getAttribute('data-query');
+
+        if (targetDataset) {
+          this.activeDatasetKey = targetDataset;
+          this.anomalyField = this.activeDatasetKey === 'soc_logs' ? 'latency_ms' :
+                              (this.activeDatasetKey === 'grants' ? 'amount' : 'price');
+          if (this.datasetSelect) this.datasetSelect.value = targetDataset;
+        }
+
+        if (targetQuery && this.queryInput) {
+          this.queryInput.value = targetQuery;
+        }
+
+        // Reset ceiling slider
+        this.ceilingFilter = 100;
+        if (this.elasticCeilingSlider) this.elasticCeilingSlider.value = 100;
+        if (this.sliderValueLabel) this.sliderValueLabel.textContent = 'Showing all records (No ceiling cap)';
+
+        this.runSearch();
+      });
+    });
+  }
+
   initElasticSlider() {
     if (this.elasticCeilingSlider) {
       this.elasticCeilingSlider.addEventListener('input', (e) => {
@@ -619,7 +674,9 @@ class AveLynxPlaygroundApp {
 
     if (this.slicerTrack) this.slicerTrack.style.width = Math.max(4, slice.percent) + '%';
     if (this.slicerLabel) this.slicerLabel.textContent = 'Slice: ' + slice.percent + '% of Dataset';
-    if (this.slicerStats) this.slicerStats.textContent = hits.length + ' / ' + totalDocs + ' documents';
+    if (this.slicerStats) this.slicerStats.textContent = hits.length + ' / ' + totalDocs + ' docs';
+    const slicerBadge = document.getElementById('slicerBadge');
+    if (slicerBadge) slicerBadge.textContent = slice.percent + '% Slice';
 
     // 2. Process Probabilistic Anomaly Detection (Native or Client Fallback)
     let anomalyReport = (this.client && typeof this.client.detectAnomalies === 'function')
@@ -719,7 +776,6 @@ class AveLynxPlaygroundApp {
 
     const anomalyIcon = document.getElementById('anomalyIcon');
     const anomalyStatBadge = document.getElementById('anomalyStatBadge');
-    const anomalySub = document.getElementById('anomalySub');
 
     if (this.anomalyPill) {
       if (report.anomalyCount > 0) {
@@ -727,19 +783,17 @@ class AveLynxPlaygroundApp {
         this.anomalyPill.textContent = report.anomalyCount + ' Outlier(s) Detected';
         if (anomalyIcon) anomalyIcon.textContent = '🚨';
         if (anomalyStatBadge) {
-          anomalyStatBadge.className = 'tc-badge anomaly-stat-badge';
+          anomalyStatBadge.className = 'bench-tag tag-rose';
           anomalyStatBadge.textContent = 'Z >= 2.2σ';
         }
-        if (anomalySub) anomalySub.textContent = 'MAD Statistical Profiler';
       } else {
         this.anomalyPill.className = 'anomaly-pill clean';
         this.anomalyPill.textContent = 'Normal Distribution';
         if (anomalyIcon) anomalyIcon.textContent = '✓';
         if (anomalyStatBadge) {
-          anomalyStatBadge.className = 'tc-badge sub15-badge';
-          anomalyStatBadge.textContent = 'Clean / 0 Outliers';
+          anomalyStatBadge.className = 'bench-tag tag-emerald';
+          anomalyStatBadge.textContent = 'Clean Distribution';
         }
-        if (anomalySub) anomalySub.textContent = 'Within Normal Bounds';
       }
     }
   }
