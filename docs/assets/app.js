@@ -3217,6 +3217,16 @@ class AveLynxPlaygroundApp {
     this.inspectorDeleteBtn = document.getElementById('inspectorDeleteBtn');
     this.terminalQueryInput = document.getElementById('terminalQueryInput');
     this.terminalQueryEditorWrap = document.getElementById('terminalQueryEditorWrap');
+    this.queryMode = 'simple';
+    this.queryModeSimpleBtn = document.getElementById('queryModeSimpleBtn');
+    this.queryModeJsonBtn = document.getElementById('queryModeJsonBtn');
+    this.simpleQueryBar = document.getElementById('simpleQueryBar');
+    this.jsonQueryEditorPanel = document.getElementById('jsonQueryEditorPanel');
+    this.jsonQueryToolbarExtras = document.getElementById('jsonQueryToolbarExtras');
+    this.mainJsonQueryInput = document.getElementById('mainJsonQueryInput');
+    this.mainJsonEditorStatus = document.getElementById('mainJsonEditorStatus');
+    this.mainJsonErrorLabel = document.getElementById('mainJsonErrorLabel');
+    this.jsonActiveIndexSpan = document.getElementById('jsonActiveIndexSpan');
   }
 
   initClient() {
@@ -3310,6 +3320,7 @@ class AveLynxPlaygroundApp {
     const cfg = DATASET_CONFIG[val] || DATASET_CONFIG.soc_logs;
     this.anomalyField = cfg.anomalyField;
     this.ceilingFilter = 100;
+    if (this.jsonActiveIndexSpan) this.jsonActiveIndexSpan.textContent = val;
     if (this.elasticCeilingSlider) this.elasticCeilingSlider.value = 100;
     if (this.sliderValueLabel) this.sliderValueLabel.textContent = 'Showing all records (No ceiling cap)';
     this.syncLivePopulation(val);
@@ -3332,6 +3343,13 @@ class AveLynxPlaygroundApp {
 
     if (query && this.queryInput) {
       this.queryInput.value = query;
+    }
+    if (this.mainJsonQueryInput) {
+      this.mainJsonQueryInput.value = JSON.stringify({
+        query: query || '*',
+        limit: 20
+      }, null, 2);
+      this.validateMainJsonQuery();
     }
 
     this.ceilingFilter = 100;
@@ -3744,7 +3762,165 @@ class AveLynxPlaygroundApp {
     }
   }
 
+
+  setQueryMode(mode) {
+    this.queryMode = mode;
+    if (mode === 'simple') {
+      if (this.simpleQueryBar) this.simpleQueryBar.style.display = 'flex';
+      if (this.jsonQueryEditorPanel) this.jsonQueryEditorPanel.style.display = 'none';
+      if (this.jsonQueryToolbarExtras) this.jsonQueryToolbarExtras.style.display = 'none';
+      if (this.queryModeSimpleBtn) this.queryModeSimpleBtn.classList.add('active');
+      if (this.queryModeJsonBtn) this.queryModeJsonBtn.classList.remove('active');
+    } else {
+      if (this.simpleQueryBar) this.simpleQueryBar.style.display = 'none';
+      if (this.jsonQueryEditorPanel) this.jsonQueryEditorPanel.style.display = 'block';
+      if (this.jsonQueryToolbarExtras) this.jsonQueryToolbarExtras.style.display = 'flex';
+      if (this.queryModeSimpleBtn) this.queryModeSimpleBtn.classList.remove('active');
+      if (this.queryModeJsonBtn) this.queryModeJsonBtn.classList.add('active');
+
+      if (this.jsonActiveIndexSpan) this.jsonActiveIndexSpan.textContent = this.activeDatasetKey;
+
+      // Initialize with current query if empty
+      if (this.mainJsonQueryInput && (!this.mainJsonQueryInput.value || this.mainJsonQueryInput.value.trim() === '')) {
+        const currentQ = (this.queryInput ? this.queryInput.value : 'exfiltration').trim();
+        this.mainJsonQueryInput.value = JSON.stringify({
+          query: currentQ,
+          limit: 20
+        }, null, 2);
+        this.validateMainJsonQuery();
+      }
+    }
+  }
+
+  loadJsonTemplate(type) {
+    if (!this.mainJsonQueryInput) return;
+    let template = {};
+
+    if (type === 'match') {
+      template = {
+        query: "exfiltration",
+        limit: 20
+      };
+    } else if (type === 'filter') {
+      template = {
+        query: "*",
+        filters: {
+          severity: "CRITICAL"
+        },
+        limit: 20
+      };
+    } else if (type === 'range') {
+      if (this.activeDatasetKey === 'soc_logs') {
+        template = {
+          query: "severity_level:[3 TO 4]",
+          limit: 20
+        };
+      } else if (this.activeDatasetKey === 'demo_cyber_threats') {
+        template = {
+          query: "threat_score:[80 TO 100]",
+          limit: 20
+        };
+      } else if (this.activeDatasetKey === 'demo_ecommerce_bi') {
+        template = {
+          query: "gross_revenue:[500000 TO 1500000]",
+          limit: 20
+        };
+      } else {
+        template = {
+          query: "amount_awarded:[250000 TO 1200000]",
+          limit: 20
+        };
+      }
+    } else if (type === 'sort') {
+      template = {
+        query: "*",
+        sort: this.anomalyField,
+        sort_order: "desc",
+        limit: 15
+      };
+    } else if (type === 'facets') {
+      template = {
+        query: "*",
+        facets: ["severity", "category", "status"],
+        limit: 10
+      };
+    }
+
+    this.mainJsonQueryInput.value = JSON.stringify(template, null, 2);
+    this.validateMainJsonQuery();
+  }
+
+  formatMainJsonQuery() {
+    if (!this.mainJsonQueryInput) return;
+    try {
+      const parsed = JSON.parse(this.mainJsonQueryInput.value);
+      this.mainJsonQueryInput.value = JSON.stringify(parsed, null, 2);
+      this.validateMainJsonQuery();
+    } catch (e) {
+      alert('Invalid JSON: ' + e.message);
+    }
+  }
+
+  validateMainJsonQuery() {
+    const statusEl = this.mainJsonEditorStatus;
+    const errorEl = this.mainJsonErrorLabel;
+    const btn = document.getElementById('executeJsonQueryBtn');
+    const input = this.mainJsonQueryInput;
+    if (!input) return false;
+
+    try {
+      JSON.parse(input.value);
+      if (statusEl) {
+        statusEl.textContent = '✓ Valid JSON';
+        statusEl.className = 'json-editor-status valid';
+      }
+      if (errorEl) errorEl.style.display = 'none';
+      if (btn) btn.disabled = false;
+      return true;
+    } catch (err) {
+      if (statusEl) {
+        statusEl.textContent = '✕ Syntax Error';
+        statusEl.className = 'json-editor-status invalid';
+      }
+      if (errorEl) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      }
+      if (btn) btn.disabled = true;
+      return false;
+    }
+  }
+
+  executeMainJsonQuery() {
+    if (!this.validateMainJsonQuery()) return;
+    try {
+      const payload = JSON.parse(this.mainJsonQueryInput.value);
+      if (payload.query !== undefined && this.queryInput) {
+        this.queryInput.value = payload.query;
+      }
+      this.runSearch(payload);
+    } catch (err) {
+      alert('JSON execution error: ' + err.message);
+    }
+  }
+
   bindEvents() {
+    if (this.mainJsonQueryInput) {
+      this.mainJsonQueryInput.addEventListener('input', () => this.validateMainJsonQuery());
+      this.mainJsonQueryInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const start = this.mainJsonQueryInput.selectionStart;
+          const end = this.mainJsonQueryInput.selectionEnd;
+          this.mainJsonQueryInput.value = this.mainJsonQueryInput.value.substring(0, start) + '  ' + this.mainJsonQueryInput.value.substring(end);
+          this.mainJsonQueryInput.selectionStart = this.mainJsonQueryInput.selectionEnd = start + 2;
+          this.validateMainJsonQuery();
+        } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          this.executeMainJsonQuery();
+        }
+      });
+    }
     if (this.themeToggleBtn) {
       this.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
     }
@@ -3827,7 +4003,7 @@ class AveLynxPlaygroundApp {
     }
   }
 
-  async runSearch() {
+  async runSearch(customPayload = null) {
     const t0 = performance.now();
     const rawQuery = (this.queryInput ? this.queryInput.value : '*').trim() || '*';
     const query = rawQuery;
@@ -3869,10 +4045,11 @@ class AveLynxPlaygroundApp {
         }
 
         if (this.client) {
-          const res = await this.client.search(this.activeDatasetKey, {
+          const searchOpts = customPayload ? customPayload : {
             query: query,
             limit: 50
-          });
+          };
+          const res = await this.client.search(this.activeDatasetKey, searchOpts);
           roundtripMs = Math.round(performance.now() - t0);
           engineTookMs = res.took_ms !== undefined ? res.took_ms : Math.max(16, Math.round(roundtripMs * 0.45));
           hits = res.hits || [];
