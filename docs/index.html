@@ -21,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="assets/styles.css?v=3.6.0">
+  <link rel="stylesheet" href="assets/styles.css?v=3.7.0">
 
   <!-- Stretchy Client UMD Bundle -->
   <script src="assets/stretchy.umd.js"></script>
@@ -176,6 +176,10 @@
           </div>
 
           <div style="font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+            <button id="openJsonEditorBtn" type="button" class="btn btn-secondary" style="padding: 3px 10px; font-size: 0.76rem; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;" onclick="window.app && window.app.openNewDocEditor()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              <span>+ Add Record (JSON Editor)</span>
+            </button>
             <span class="pulse-dot" style="background: var(--accent-emerald); width: 7px; height: 7px;"></span>
             <span style="color: var(--accent-emerald); font-weight: 600;">Live Stretchy D1 Active</span>
           </div>
@@ -338,6 +342,7 @@
                 <div class="terminal-view-switch" style="display: flex; gap: 4px; margin-left: 8px;">
                   <button type="button" id="tabTerminalJson" class="term-tab-btn active" onclick="window.switchTerminalTab('json')">Raw Engine JSON</button>
                   <button type="button" id="tabTerminalSdk" class="term-tab-btn" onclick="window.switchTerminalTab('sdk')">Client SDK Code</button>
+                  <button type="button" id="tabTerminalQuery" class="term-tab-btn" onclick="window.switchTerminalTab('query')">&#9999;&#65039; JSON Query</button>
                 </div>
               </div>
               <button class="copy-btn copy-trigger" id="terminalCopyBtn" data-copy="" style="font-size: 0.75rem; padding: 4px 8px;">
@@ -347,6 +352,21 @@
             </div>
 
             <!-- Terminal Monospace Screen -->
+            <!-- Interactive Terminal JSON Query Editor Panel -->
+            <div id="terminalQueryEditorWrap" style="display: none; flex-direction: column; flex: 1; min-height: 380px; max-height: 480px; background: #060911;">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.72rem;">
+                <span style="color: var(--text-muted); font-family: var(--font-mono);">&#9889; POST /api/v1/indices/:name/search</span>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.7rem;" onclick="window.app && window.app.formatTerminalQuery()">Format</button>
+                  <button type="button" class="btn btn-primary" style="padding: 2px 10px; font-size: 0.7rem; background: var(--accent-indigo);" onclick="window.app && window.app.executeTerminalJsonQuery()">Execute Query &#9889;</button>
+                </div>
+              </div>
+              <textarea id="terminalQueryInput" spellcheck="false" style="flex: 1; width: 100%; border: none; background: transparent; color: #38bdf8; font-family: var(--font-mono); font-size: 0.825rem; padding: 12px; resize: none; outline: none; line-height: 1.45;" placeholder='{
+  "query": "exfiltration",
+  "limit": 25
+}'></textarea>
+            </div>
+
             <pre class="code-pre" style="flex: 1; min-height: 380px; max-height: 480px; overflow-y: auto;"><code id="rawEngineJsonCode">// Loading live engine response...</code><code id="codeSnippet" style="display: none;">// Loading SDK code...</code></pre>
 
             <!-- Lower Corner Speed Counter & Status Bar -->
@@ -618,18 +638,21 @@
   </footer>
 
   <!-- Application Logic -->
-  <script src="assets/app.js?v=3.6.0"></script>
+  <script src="assets/app.js?v=3.7.0"></script>
 
   <!-- Document Inspector Modal -->
   <div id="docInspectorModal" class="inspector-modal" style="display: none;">
     <div class="inspector-modal-backdrop" id="docInspectorBackdrop" onclick="window.closeInspectorModal()"></div>
-    <div class="inspector-modal-content">
+    <div class="inspector-modal-content" style="max-width: 720px;">
       <div class="inspector-header">
         <div class="inspector-title-wrap">
-          <span class="inspector-badge" id="inspectorBadge">Document</span>
+          <span class="inspector-badge" id="inspectorBadge">Document JSON Editor</span>
           <h3 class="inspector-doc-title" id="inspectorDocTitle">Document Title</h3>
         </div>
-        <button class="inspector-close-btn" id="inspectorCloseBtn" onclick="window.closeInspectorModal()" aria-label="Close Inspector">&times;</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span id="jsonEditorStatus" class="json-editor-status valid">&#10003; Valid JSON</span>
+          <button class="inspector-close-btn" id="inspectorCloseBtn" onclick="window.closeInspectorModal()" aria-label="Close Inspector">&times;</button>
+        </div>
       </div>
       <div class="inspector-body">
         <div class="inspector-stats-row">
@@ -647,19 +670,34 @@
           </div>
         </div>
 
-        <div class="inspector-section-title">Raw Document Payload (JSON)</div>
-        <pre class="inspector-json-pre"><code id="inspectorJsonCode">{ }</code></pre>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <span class="inspector-section-title" style="margin: 0;">Interactive JSON Editor (Demo Data)</span>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem;" onclick="window.app && window.app.formatInspectorJson()">&#129668; Format JSON</button>
+            <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem;" onclick="window.app && window.app.resetInspectorJson()">&#8634; Reset</button>
+            <button type="button" class="btn btn-secondary" id="inspectorCopyBtn" style="padding: 2px 8px; font-size: 0.72rem;" onclick="window.app && window.app.copyInspectorJson()">&#128203; Copy</button>
+          </div>
+        </div>
+
+        <!-- Editable JSON Textarea -->
+        <textarea id="inspectorJsonEditor" class="inspector-json-editor" spellcheck="false"></textarea>
+        <div id="jsonEditorError" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--accent-rose); font-family: var(--font-mono);"></div>
       </div>
-      <div class="inspector-footer">
-        <button class="btn btn-secondary" id="inspectorCopyJsonBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Copy JSON Payload
+
+      <div class="inspector-footer" style="display: flex; align-items: center; justify-content: space-between;">
+        <button class="btn btn-secondary" id="inspectorDeleteBtn" style="color: var(--accent-rose); border-color: rgba(244,63,94,0.3); font-size: 0.78rem;" onclick="window.app && window.app.deleteInspectorDoc()">
+          &#128465;&#65039; Delete Record
         </button>
-        <button class="btn btn-primary" id="inspectorDoneBtn" onclick="window.closeInspectorModal()">Close</button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary" id="inspectorDoneBtn" onclick="window.closeInspectorModal()">Cancel</button>
+          <button class="btn btn-primary" id="inspectorSaveBtn" onclick="window.app && window.app.saveInspectorJson()" style="display: inline-flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span id="saveBtnText">Save &amp; Index Document &#9889;</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
-
 
   <!-- SDK Code Inspector Modal -->
   <div id="sdkCodeModal" class="inspector-modal" style="display: none;">

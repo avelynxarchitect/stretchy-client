@@ -3209,6 +3209,14 @@ class AveLynxPlaygroundApp {
     this.inspectorMetricVal = document.getElementById('inspectorMetricVal');
     this.inspectorAnomalyStatus = document.getElementById('inspectorAnomalyStatus');
     this.inspectorJsonCode = document.getElementById('inspectorJsonCode');
+    this.inspectorJsonEditor = document.getElementById('inspectorJsonEditor');
+    this.jsonEditorStatus = document.getElementById('jsonEditorStatus');
+    this.jsonEditorError = document.getElementById('jsonEditorError');
+    this.inspectorSaveBtn = document.getElementById('inspectorSaveBtn');
+    this.saveBtnText = document.getElementById('saveBtnText');
+    this.inspectorDeleteBtn = document.getElementById('inspectorDeleteBtn');
+    this.terminalQueryInput = document.getElementById('terminalQueryInput');
+    this.terminalQueryEditorWrap = document.getElementById('terminalQueryEditorWrap');
   }
 
   initClient() {
@@ -3402,7 +3410,7 @@ class AveLynxPlaygroundApp {
     }
   }
 
-  // Document Inspector Modal
+  // Document JSON Editor Modal & Terminal JSON Query Editor Suite
   initDocInspector() {
     const closeModal = () => {
       if (this.docInspectorModal) this.docInspectorModal.style.display = 'none';
@@ -3412,14 +3420,27 @@ class AveLynxPlaygroundApp {
     if (this.inspectorCloseBtn) this.inspectorCloseBtn.addEventListener('click', closeModal);
     if (this.inspectorDoneBtn) this.inspectorDoneBtn.addEventListener('click', closeModal);
 
-    if (this.inspectorCopyJsonBtn) {
-      this.inspectorCopyJsonBtn.addEventListener('click', () => {
-        if (!this.inspectorJsonCode) return;
-        navigator.clipboard.writeText(this.inspectorJsonCode.textContent).then(() => {
-          const orig = this.inspectorCopyJsonBtn.innerHTML;
-          this.inspectorCopyJsonBtn.textContent = 'JSON Copied!';
-          setTimeout(() => { this.inspectorCopyJsonBtn.innerHTML = orig; }, 2000);
-        });
+    if (this.inspectorJsonEditor) {
+      this.inspectorJsonEditor.addEventListener('input', () => this.validateInspectorJson());
+      this.inspectorJsonEditor.addEventListener('keydown', (e) => {
+        // Tab key indent
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const start = this.inspectorJsonEditor.selectionStart;
+          const end = this.inspectorJsonEditor.selectionEnd;
+          this.inspectorJsonEditor.value = this.inspectorJsonEditor.value.substring(0, start) + '  ' + this.inspectorJsonEditor.value.substring(end);
+          this.inspectorJsonEditor.selectionStart = this.inspectorJsonEditor.selectionEnd = start + 2;
+          this.validateInspectorJson();
+        }
+      });
+    }
+
+    if (this.terminalQueryInput) {
+      this.terminalQueryInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          this.executeTerminalJsonQuery();
+        }
       });
     }
   }
@@ -3427,12 +3448,16 @@ class AveLynxPlaygroundApp {
   openDocInspector(hit, isAnomaly) {
     if (!this.docInspectorModal) return;
     const src = hit.source || hit || {};
+    this.currentEditingDoc = JSON.parse(JSON.stringify(src));
+    this.currentEditingHit = hit;
+    this.isCreatingNewDoc = false;
+
     const title = src.name || src.title || src.action || hit.id || 'Document';
     const val = src[this.anomalyField];
 
     if (this.inspectorDocTitle) this.inspectorDocTitle.textContent = title;
     if (this.inspectorBadge) this.inspectorBadge.textContent = src.category || src.service || src.agency || src.attack_type || 'Record';
-    if (this.inspectorBm25Score) this.inspectorBm25Score.textContent = 'BM25: ' + (hit.score || 1.0);
+    if (this.inspectorBm25Score) this.inspectorBm25Score.textContent = 'BM25: ' + (hit.score !== undefined ? hit.score : 1.0);
     if (this.inspectorMetricName) this.inspectorMetricName.textContent = this.anomalyField;
     if (this.inspectorMetricVal) this.inspectorMetricVal.textContent = val !== undefined ? (typeof val === 'number' ? val.toLocaleString() : val) : '--';
 
@@ -3441,11 +3466,282 @@ class AveLynxPlaygroundApp {
       this.inspectorAnomalyStatus.style.color = isAnomaly ? 'var(--accent-rose)' : 'var(--accent-emerald)';
     }
 
-    if (this.inspectorJsonCode) {
-      this.inspectorJsonCode.textContent = JSON.stringify(src, null, 2);
+    if (this.inspectorJsonEditor) {
+      this.inspectorJsonEditor.value = JSON.stringify(src, null, 2);
+      this.validateInspectorJson();
     }
 
+    const deleteBtn = document.getElementById('inspectorDeleteBtn');
+    if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+
+    const saveBtnText = document.getElementById('saveBtnText');
+    if (saveBtnText) saveBtnText.textContent = 'Save & Index Document ⚡';
+
     this.docInspectorModal.style.display = 'flex';
+  }
+
+  openNewDocEditor() {
+    if (!this.docInspectorModal) return;
+    this.isCreatingNewDoc = true;
+
+    // Generate clean template based on selected active dataset
+    let template = {};
+    const ts = new Date().toISOString();
+    const id = 'demo_' + Math.random().toString(36).substring(2, 8);
+
+    if (this.activeDatasetKey === 'soc_logs') {
+      template = {
+        id: 'inc_' + id,
+        title: 'Custom Injected SOC Incident: Lateral Movement Attempt',
+        severity: 'CRITICAL',
+        severity_level: 4,
+        category: 'LATERAL_MOVEMENT',
+        status: 'ACTIVE',
+        service_name: 'avelynx-sec-vault',
+        client_ip: '198.51.100.88',
+        message: 'Suspicious Kerberoasting activity detected across cluster nodes.',
+        timestamp: ts
+      };
+    } else if (this.activeDatasetKey === 'demo_cyber_threats') {
+      template = {
+        id: 'threat_' + id,
+        title: 'Zero-Day API Token Harvesting Infiltration',
+        threat_score: 96,
+        threat_level: 'Critical',
+        attack_type: 'TOKEN_THEFT',
+        src_country: 'SG',
+        src_city: 'Singapore',
+        dest_country: 'US',
+        dest_city: 'New York',
+        latency_ms: 195
+      };
+    } else if (this.activeDatasetKey === 'demo_ecommerce_bi') {
+      template = {
+        id: 'hub_' + id,
+        title: 'Tokyo Ultra-Fast Fulfillment Hub',
+        gross_revenue: 1450000,
+        monthly_orders: 98000,
+        region: 'APAC',
+        country: 'Japan',
+        city: 'Tokyo',
+        currency: 'USD'
+      };
+    } else {
+      template = {
+        id: 'grant_' + id,
+        title: 'Community Clean Energy Grid Fellowship',
+        organization: 'Pacific Clean Power Alliance',
+        grantor: 'Department of Energy',
+        amount_awarded: 850000,
+        youth_impact_count: 550,
+        award_status: 'Awarded'
+      };
+    }
+
+    this.currentEditingDoc = template;
+    this.currentEditingHit = { id: template.id, score: 1.0, source: template };
+
+    if (this.inspectorDocTitle) this.inspectorDocTitle.textContent = '+ Create New Demo Record (' + this.activeDatasetKey + ')';
+    if (this.inspectorBadge) this.inspectorBadge.textContent = 'New Document';
+    if (this.inspectorBm25Score) this.inspectorBm25Score.textContent = 'BM25: N/A';
+    if (this.inspectorMetricName) this.inspectorMetricName.textContent = this.anomalyField;
+    if (this.inspectorMetricVal) this.inspectorMetricVal.textContent = 'Pending';
+    if (this.inspectorAnomalyStatus) {
+      this.inspectorAnomalyStatus.textContent = 'New Record';
+      this.inspectorAnomalyStatus.style.color = 'var(--accent-indigo)';
+    }
+
+    if (this.inspectorJsonEditor) {
+      this.inspectorJsonEditor.value = JSON.stringify(template, null, 2);
+      this.validateInspectorJson();
+    }
+
+    const deleteBtn = document.getElementById('inspectorDeleteBtn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
+
+    const saveBtnText = document.getElementById('saveBtnText');
+    if (saveBtnText) saveBtnText.textContent = 'Index New Document in Stretchy D1 ⚡';
+
+    this.docInspectorModal.style.display = 'flex';
+  }
+
+  validateInspectorJson() {
+    const statusEl = document.getElementById('jsonEditorStatus');
+    const errorEl = document.getElementById('jsonEditorError');
+    const saveBtn = document.getElementById('inspectorSaveBtn');
+    const editor = document.getElementById('inspectorJsonEditor');
+    if (!editor) return false;
+
+    try {
+      JSON.parse(editor.value);
+      if (statusEl) {
+        statusEl.textContent = '✓ Valid JSON';
+        statusEl.className = 'json-editor-status valid';
+      }
+      if (errorEl) errorEl.style.display = 'none';
+      if (saveBtn) saveBtn.disabled = false;
+      editor.classList.remove('invalid');
+      return true;
+    } catch (err) {
+      if (statusEl) {
+        statusEl.textContent = '✕ Syntax Error';
+        statusEl.className = 'json-editor-status invalid';
+      }
+      if (errorEl) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      }
+      if (saveBtn) saveBtn.disabled = true;
+      editor.classList.add('invalid');
+      return false;
+    }
+  }
+
+  formatInspectorJson() {
+    const editor = document.getElementById('inspectorJsonEditor');
+    if (!editor) return;
+    try {
+      const parsed = JSON.parse(editor.value);
+      editor.value = JSON.stringify(parsed, null, 2);
+      this.validateInspectorJson();
+    } catch (e) {
+      // syntax error
+    }
+  }
+
+  resetInspectorJson() {
+    const editor = document.getElementById('inspectorJsonEditor');
+    if (!editor || !this.currentEditingDoc) return;
+    editor.value = JSON.stringify(this.currentEditingDoc, null, 2);
+    this.validateInspectorJson();
+  }
+
+  copyInspectorJson() {
+    const editor = document.getElementById('inspectorJsonEditor');
+    if (!editor) return;
+    navigator.clipboard.writeText(editor.value).then(() => {
+      const btn = document.getElementById('inspectorCopyBtn');
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      }
+    });
+  }
+
+  async saveInspectorJson() {
+    if (!this.validateInspectorJson()) return;
+    const editor = document.getElementById('inspectorJsonEditor');
+    const saveBtn = document.getElementById('inspectorSaveBtn');
+    const saveBtnText = document.getElementById('saveBtnText');
+    if (!editor) return;
+
+    let doc;
+    try {
+      doc = JSON.parse(editor.value);
+    } catch (e) {
+      alert('Invalid JSON: ' + e.message);
+      return;
+    }
+
+    const docId = doc.id || doc._id || ('doc_' + Date.now());
+    doc.id = docId;
+
+    if (saveBtnText) saveBtnText.textContent = 'Indexing in Stretchy D1...';
+    if (saveBtn) saveBtn.disabled = true;
+
+    try {
+      // 1. Post to live Cloudflare Worker backend
+      const res = await fetch(`${this.baseUrl}/api/v1/indices/${this.activeDatasetKey}/docs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(doc)
+      });
+      const data = await res.json();
+      console.log('[AveLynx] Document indexed in Stretchy D1:', data);
+
+      // 2. Update local population cache
+      const pop = this.populationCache[this.activeDatasetKey] || [];
+      const existingIdx = pop.findIndex(d => (d.id || d._id) === docId);
+      if (existingIdx >= 0) {
+        pop[existingIdx] = doc;
+      } else {
+        pop.unshift(doc);
+      }
+      this.populationCache[this.activeDatasetKey] = pop;
+
+      // 3. Close modal & re-execute query to refresh hits, BM25 scores, and anomaly stats
+      if (this.docInspectorModal) this.docInspectorModal.style.display = 'none';
+      await this.runSearch();
+
+    } catch (err) {
+      console.error('[AveLynx] Save doc error:', err);
+      // Fallback: update in-memory cache anyway so user can experience it
+      const pop = this.populationCache[this.activeDatasetKey] || [];
+      const existingIdx = pop.findIndex(d => (d.id || d._id) === docId);
+      if (existingIdx >= 0) {
+        pop[existingIdx] = doc;
+      } else {
+        pop.unshift(doc);
+      }
+      this.populationCache[this.activeDatasetKey] = pop;
+      if (this.docInspectorModal) this.docInspectorModal.style.display = 'none';
+      await this.runSearch();
+    } finally {
+      if (saveBtnText) saveBtnText.textContent = 'Save & Index Document ⚡';
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+
+  async deleteInspectorDoc() {
+    if (!this.currentEditingDoc) return;
+    const docId = this.currentEditingDoc.id || this.currentEditingDoc._id;
+    if (!docId) return;
+
+    if (!confirm(`Delete document '${docId}' from demo index '${this.activeDatasetKey}'?`)) {
+      return;
+    }
+
+    try {
+      await fetch(`${this.baseUrl}/api/v1/indices/${this.activeDatasetKey}/docs/${docId}`, {
+        method: 'DELETE'
+      });
+    } catch (e) {
+      console.warn('Backend delete fallback:', e);
+    }
+
+    // Remove from local cache
+    const pop = this.populationCache[this.activeDatasetKey] || [];
+    this.populationCache[this.activeDatasetKey] = pop.filter(d => (d.id || d._id) !== docId);
+
+    if (this.docInspectorModal) this.docInspectorModal.style.display = 'none';
+    await this.runSearch();
+  }
+
+  formatTerminalQuery() {
+    const textarea = document.getElementById('terminalQueryInput');
+    if (!textarea) return;
+    try {
+      const parsed = JSON.parse(textarea.value);
+      textarea.value = JSON.stringify(parsed, null, 2);
+    } catch (e) {
+      alert('Invalid JSON query: ' + e.message);
+    }
+  }
+
+  executeTerminalJsonQuery() {
+    const textarea = document.getElementById('terminalQueryInput');
+    if (!textarea) return;
+    try {
+      const payload = JSON.parse(textarea.value);
+      if (payload.query !== undefined && this.queryInput) {
+        this.queryInput.value = payload.query;
+      }
+      window.switchTerminalTab('json');
+      this.runSearch();
+    } catch (err) {
+      alert('Invalid JSON query payload: ' + err.message);
+    }
   }
 
   bindEvents() {
@@ -3928,6 +4224,75 @@ class AveLynxPlaygroundApp {
 }
 
 // 3. Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  window.app = new AveLynxPlaygroundApp();
+});
+
+// Fail-safe global modal handlers
+window.closeInspectorModal = function() {
+  const m = document.getElementById('docInspectorModal');
+  if (m) m.style.display = 'none';
+};
+window.closeSdkModal = function() {
+  const m = document.getElementById('sdkCodeModal');
+  if (m) m.style.display = 'none';
+};
+window.openSdkModal = function() {
+  const m = document.getElementById('sdkCodeModal');
+  if (m) m.style.display = 'flex';
+};
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    window.closeInspectorModal();
+    window.closeSdkModal();
+  }
+});
+
+
+window.switchTerminalTab = function(tab) {
+  const jsonCode = document.getElementById('rawEngineJsonCode');
+  const sdkCode = document.getElementById('codeSnippet');
+  const queryWrap = document.getElementById('terminalQueryEditorWrap');
+  const codePre = document.querySelector('.code-pre');
+  
+  const btnJson = document.getElementById('tabTerminalJson');
+  const btnSdk = document.getElementById('tabTerminalSdk');
+  const btnQuery = document.getElementById('tabTerminalQuery');
+
+  if (tab === 'json') {
+    if (codePre) codePre.style.display = 'block';
+    if (jsonCode) jsonCode.style.display = 'block';
+    if (sdkCode) sdkCode.style.display = 'none';
+    if (queryWrap) queryWrap.style.display = 'none';
+    if (btnJson) btnJson.classList.add('active');
+    if (btnSdk) btnSdk.classList.remove('active');
+    if (btnQuery) btnQuery.classList.remove('active');
+  } else if (tab === 'sdk') {
+    if (codePre) codePre.style.display = 'block';
+    if (jsonCode) jsonCode.style.display = 'none';
+    if (sdkCode) sdkCode.style.display = 'block';
+    if (queryWrap) queryWrap.style.display = 'none';
+    if (btnJson) btnJson.classList.remove('active');
+    if (btnSdk) btnSdk.classList.add('active');
+    if (btnQuery) btnQuery.classList.remove('active');
+  } else if (tab === 'query') {
+    if (codePre) codePre.style.display = 'none';
+    if (queryWrap) queryWrap.style.display = 'flex';
+    if (btnJson) btnJson.classList.remove('active');
+    if (btnSdk) btnSdk.classList.remove('active');
+    if (btnQuery) btnQuery.classList.add('active');
+
+    const textarea = document.getElementById('terminalQueryInput');
+    if (textarea && (!textarea.value || textarea.value.trim() === '')) {
+      const q = (document.getElementById('queryInput')?.value || 'exfiltration').trim();
+      textarea.value = JSON.stringify({
+        query: q,
+        limit: 25
+      }, null, 2);
+    }
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   window.app = new AveLynxPlaygroundApp();
 });

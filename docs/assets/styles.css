@@ -1849,3 +1849,51 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* Interactive Document JSON Editor */
+.inspector-json-editor {
+  width: 100%;
+  min-height: 280px;
+  max-height: 420px;
+  font-family: 'JetBrains Mono', 'Fira Code', var(--font-mono);
+  font-size: 0.825rem;
+  background: #060911;
+  color: #38bdf8;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  resize: vertical;
+  line-height: 1.5;
+  outline: none;
+  tab-size: 2;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inspector-json-editor:focus {
+  border-color: var(--accent-indigo);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.inspector-json-editor.invalid {
+  border-color: var(--accent-rose);
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.2);
+}
+
+.json-editor-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+}
+
+.json-editor-status.valid {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-emerald);
+}
+
+.json-editor-status.invalid {
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--accent-rose);
+}
