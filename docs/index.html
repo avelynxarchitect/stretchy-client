@@ -180,9 +180,10 @@
                 <span class="terminal-tab-title">stretchy-console</span>
                 <div class="terminal-dataset-picker">
                   <select id="datasetSelect" class="terminal-select" onchange="window.app && window.app.onDatasetChange(this.value)">
-                    <option value="soc_logs" selected>index: soc_logs (8 docs)</option>
-                    <option value="products">index: products (12 docs)</option>
-                    <option value="grants">index: grants (4 docs)</option>
+                    <option value="soc_logs" selected>index: soc_logs (64 Security Logs &amp; WAF)</option>
+                    <option value="demo_cyber_threats">index: demo_cyber_threats (15 Global Threat Nodes)</option>
+                    <option value="demo_ecommerce_bi">index: demo_ecommerce_bi (20 Global Commerce Hubs)</option>
+                    <option value="demo_grant_portfolio">index: demo_grant_portfolio (12 Clean Energy Grants)</option>
                   </select>
                 </div>
               </div>
@@ -191,7 +192,7 @@
               <div class="terminal-input-body">
                 <div class="terminal-prompt-line">
                   <span class="t-prompt">stretchy&gt;</span>
-                  <input type="text" id="queryInput" class="terminal-input" placeholder="Enter query, SPL, or SQL (e.g. 'exfiltration', 'latency_ms > 500', or '*')..." value="*">
+                  <input type="text" id="queryInput" class="terminal-input" placeholder="Enter query, SPL, or SQL (e.g. 'exfiltration', 'latency_ms > 500', or '*')..." value="exfiltration">
                 </div>
               </div>
 
@@ -217,25 +218,29 @@
                 <span class="tqq-label">EXAMPLE QUERIES:</span>
               </div>
               <div class="tqq-chips">
-                <button type="button" class="tqq-chip active" data-dataset="soc_logs" data-query="exfiltration probe burst" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                <button type="button" class="tqq-chip active" data-dataset="soc_logs" data-query="exfiltration" onclick="window.app && window.app.selectSuggestedQuery(this)">
                   <span class="tqq-tag soc">SOC</span>
-                  <span class="tqq-text">🚨 Threat Spike ("exfiltration probe burst")</span>
+                  <span class="tqq-text">🚨 Threat Egress ("exfiltration")</span>
                 </button>
-                <button type="button" class="tqq-chip" data-dataset="soc_logs" data-query="SELECT * FROM soc_logs WHERE latency_ms > 500" onclick="window.app && window.app.selectSuggestedQuery(this)">
-                  <span class="tqq-tag soc">SQL</span>
-                  <span class="tqq-text">SELECT * WHERE latency_ms &gt; 500</span>
+                <button type="button" class="tqq-chip" data-dataset="soc_logs" data-query="CRITICAL" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                  <span class="tqq-tag soc">WAF</span>
+                  <span class="tqq-text">🛡️ Critical WAF Events ("CRITICAL")</span>
                 </button>
-                <button type="button" class="tqq-chip" data-dataset="products" data-query="noiz canclling" onclick="window.app && window.app.selectSuggestedQuery(this)">
-                  <span class="tqq-tag prod">BM25</span>
-                  <span class="tqq-text">🎯 Typo Tolerance ("noiz canclling")</span>
+                <button type="button" class="tqq-chip" data-dataset="demo_cyber_threats" data-query="threat_score:[80 TO 100]" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                  <span class="tqq-tag prod">THREAT</span>
+                  <span class="tqq-text">⚡ High Threat Outliers (score &ge; 80)</span>
                 </button>
-                <button type="button" class="tqq-chip" data-dataset="grants" data-query="SELECT * FROM grants WHERE amount >= 100000" onclick="window.app && window.app.selectSuggestedQuery(this)">
-                  <span class="tqq-tag grant">SQL</span>
-                  <span class="tqq-text">💰 Grants WHERE amount &gt;= 100,000</span>
+                <button type="button" class="tqq-chip" data-dataset="demo_cyber_threats" data-query="latency_ms:[150 TO 300]" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                  <span class="tqq-tag prod">LATENCY</span>
+                  <span class="tqq-text">📡 Edge Latency Range [150 TO 300ms]</span>
                 </button>
-                <button type="button" class="tqq-chip" data-dataset="products" data-query="category:electronics price:<=250" onclick="window.app && window.app.selectSuggestedQuery(this)">
-                  <span class="tqq-tag prod">SYNTAX</span>
-                  <span class="tqq-text">category:electronics price:&lt;=250</span>
+                <button type="button" class="tqq-chip" data-dataset="demo_ecommerce_bi" data-query="gross_revenue:[500000 TO 1500000]" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                  <span class="tqq-tag prod">BI</span>
+                  <span class="tqq-text">💼 Top Revenue Hubs ($500k - $1.5M)</span>
+                </button>
+                <button type="button" class="tqq-chip" data-dataset="demo_grant_portfolio" data-query="amount_awarded:[250000 TO 1200000]" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                  <span class="tqq-tag grant">GRANT</span>
+                  <span class="tqq-text">💰 High Impact Awards (&ge; $250k)</span>
                 </button>
               </div>
             </div>
