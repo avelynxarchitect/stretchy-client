@@ -3194,6 +3194,7 @@ class AveLynxPlaygroundApp {
     this.jsonTookBadge = document.getElementById('jsonTookBadge');
     this.resultsCountTab = document.getElementById('resultsCountTab');
     this.rawEngineJsonCode = document.getElementById('rawEngineJsonCode');
+    this.terminalPromptEcho = document.getElementById('terminalPromptEcho');
 
     // Document Inspector elements
     this.docInspectorModal = document.getElementById('docInspectorModal');
@@ -3459,6 +3460,7 @@ class AveLynxPlaygroundApp {
     if (this.queryInput) {
       this.queryInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') this.runSearch();
+        if (this.terminalPromptEcho) this.terminalPromptEcho.textContent = this.queryInput.value;
       });
       this.queryInput.addEventListener('input', () => this.debounceSearch());
     }
@@ -3533,6 +3535,7 @@ class AveLynxPlaygroundApp {
     const t0 = performance.now();
     const rawQuery = (this.queryInput ? this.queryInput.value : '*').trim() || '*';
     const query = rawQuery;
+    if (this.terminalPromptEcho) this.terminalPromptEcho.textContent = query;
     let hits = [];
     let totalDocs = 0;
     let engineTookMs = 0;
