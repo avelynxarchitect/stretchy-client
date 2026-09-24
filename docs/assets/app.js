@@ -2984,35 +2984,51 @@ const DEMO_DATASETS = {
 const DATASET_CONFIG = {
   soc_logs: {
     name: 'Security Operations Center (soc_logs)',
-    anomalyField: 'severity_level',
-    anomalyMetricName: 'Severity Level',
-    unit: 'lvl',
+    defaultField: 'severity_level',
+    metricFields: [
+      { id: 'severity_level', label: 'Severity Level (1-4 lvl)', unit: 'lvl' },
+      { id: 'latency_ms', label: 'Gateway Latency (ms)', unit: 'ms' },
+      { id: 'flow_volume', label: 'Traffic Flow Volume (bytes)', unit: 'bytes' },
+      { id: 'packets_per_sec', label: 'Packet Rate (pps)', unit: 'pps' }
+    ],
     defaultQuery: 'exfiltration',
-    getSnippet: (d) => d.content || d.message || `Client IP: ${d.client_ip || '127.0.0.1'} • Action: ${d.action || 'INSPECT'} • Mitre: ${d.mitre_ttp || 'T1020'}`
+    getSnippet: (d) => d.content || d.message || `Client IP: ${d.client_ip || '127.0.0.1'}   Action: ${d.action || 'INSPECT'}   Mitre: ${d.mitre_ttp || 'T1020'}`
   },
   demo_cyber_threats: {
     name: 'Global Cyber Threat Telemetry (demo_cyber_threats)',
-    anomalyField: 'threat_score',
-    anomalyMetricName: 'Threat Score',
-    unit: 'pts',
+    defaultField: 'threat_score',
+    metricFields: [
+      { id: 'threat_score', label: 'Threat Score (0-100 pts)', unit: 'pts' },
+      { id: 'latency_ms', label: 'Edge Latency (ms)', unit: 'ms' },
+      { id: 'flow_volume', label: 'Flow Volume (bytes)', unit: 'bytes' },
+      { id: 'packets_per_sec', label: 'Packets / sec (pps)', unit: 'pps' }
+    ],
     defaultQuery: 'threat_score:[80 TO 100]',
-    getSnippet: (d) => `Route: ${d.src_city || 'Origin'} (${d.src_country || '??'}) → ${d.dest_city || 'Target'} (${d.dest_country || '??'}) • Latency: ${d.latency_ms || 0}ms • ${d.attack_type || 'NORMAL_TRAFFIC'} • ${d.protocol || 'TLS'}`
+    getSnippet: (d) => `Route: ${d.src_city || 'Origin'} (${d.src_country || '??'})   ${d.dest_city || 'Target'} (${d.dest_country || '??'})   Latency: ${d.latency_ms || 0}ms   ${d.attack_type || 'NORMAL_TRAFFIC'}`
   },
   demo_ecommerce_bi: {
     name: 'Global E-Commerce Revenue BI (demo_ecommerce_bi)',
-    anomalyField: 'gross_revenue',
-    anomalyMetricName: 'Gross Revenue',
-    unit: '$',
+    defaultField: 'gross_revenue',
+    metricFields: [
+      { id: 'gross_revenue', label: 'Gross Revenue ($)', unit: '$' },
+      { id: 'monthly_orders', label: 'Monthly Orders (count)', unit: 'orders' },
+      { id: 'margin_percent', label: 'Operating Margin (%)', unit: '%' },
+      { id: 'csat_score', label: 'CSAT Score (0-100 pts)', unit: 'pts' }
+    ],
     defaultQuery: 'gross_revenue:[500000 TO 1500000]',
-    getSnippet: (d) => `${d.region || 'Global'} (${d.country || 'Territory'}) • Product: ${d.product_line || 'Cloud'} • Margin: ${d.margin_percent || 0}% • CSAT: ${d.csat_score || 0}/100`
+    getSnippet: (d) => `${d.region || 'Global'} (${d.country || 'Territory'})   Product: ${d.product_line || 'Cloud'}   Margin: ${d.margin_percent || 0}%   CSAT: ${d.csat_score || 0}/100`
   },
   demo_grant_portfolio: {
     name: 'Public & Clean Energy Grants (demo_grant_portfolio)',
-    anomalyField: 'amount_awarded',
-    anomalyMetricName: 'Amount Awarded',
-    unit: '$',
+    defaultField: 'amount_awarded',
+    metricFields: [
+      { id: 'amount_awarded', label: 'Amount Awarded ($)', unit: '$' },
+      { id: 'amount_requested', label: 'Amount Requested ($)', unit: '$' },
+      { id: 'youth_impact_count', label: 'Youth Impact (count)', unit: 'people' },
+      { id: 'cost_per_beneficiary', label: 'Cost / Beneficiary ($)', unit: '$' }
+    ],
     defaultQuery: 'amount_awarded:[250000 TO 1200000]',
-    getSnippet: (d) => `Org: ${d.organization || 'Nonprofit'} • Grantor: ${d.grantor || 'Foundation'} • Focus: ${d.focus_area || 'Community'} • Cost/Beneficiary: $${d.cost_per_beneficiary || 0}`
+    getSnippet: (d) => `Org: ${d.organization || 'Nonprofit'}   Grantor: ${d.grantor || 'Foundation'}   Focus: ${d.focus_area || 'Community'}   Cost/Beneficiary: $${d.cost_per_beneficiary || 0}`
   }
 };
 
@@ -3137,6 +3153,7 @@ class AveLynxPlaygroundApp {
     this.currentAnomalyReport = null;
     this.populationCache = { ...DEMO_DATASETS };
     this.queryCache = new Map();
+    this.plotScope = 'all'; // 'all' | 'hits' | 'outliers'
 
     this.initElements();
     this.initClient();
@@ -3228,6 +3245,11 @@ class AveLynxPlaygroundApp {
     this.mainJsonEditorStatus = document.getElementById('mainJsonEditorStatus');
     this.mainJsonErrorLabel = document.getElementById('mainJsonErrorLabel');
     this.jsonActiveIndexSpan = document.getElementById('jsonActiveIndexSpan');
+    this.metricFieldSelect = document.getElementById('metricFieldSelect');
+    this.plotScopeAll = document.getElementById('plotScopeAll');
+    this.plotScopeHits = document.getElementById('plotScopeHits');
+    this.plotScopeOutliers = document.getElementById('plotScopeOutliers');
+    this.populateMetricFieldSelect();
   }
 
   initClient() {
@@ -3312,7 +3334,8 @@ class AveLynxPlaygroundApp {
   onDatasetChange(val) {
     this.activeDatasetKey = val;
     const cfg = DATASET_CONFIG[val] || DATASET_CONFIG.soc_logs;
-    this.anomalyField = cfg.anomalyField;
+    this.anomalyField = cfg.defaultField || cfg.anomalyField;
+    this.populateMetricFieldSelect();
     this.ceilingFilter = 100;
     if (this.jsonActiveIndexSpan) this.jsonActiveIndexSpan.textContent = val;
     if (this.elasticCeilingSlider) this.elasticCeilingSlider.value = 100;
@@ -3870,6 +3893,34 @@ class AveLynxPlaygroundApp {
     }
   }
 
+
+  populateMetricFieldSelect() {
+    if (!this.metricFieldSelect) return;
+    const cfg = DATASET_CONFIG[this.activeDatasetKey] || DATASET_CONFIG.soc_logs;
+    const fields = cfg.metricFields || [{ id: this.anomalyField, label: this.anomalyField, unit: '' }];
+
+    this.metricFieldSelect.innerHTML = fields.map(f => {
+      const isSelected = f.id === this.anomalyField ? 'selected' : '';
+      return `<option value="${f.id}" ${isSelected}>${f.label}</option>`;
+    }).join('');
+  }
+
+  onMetricFieldChange(newField) {
+    this.anomalyField = newField;
+    this.ceilingFilter = 100;
+    if (this.elasticCeilingSlider) this.elasticCeilingSlider.value = 100;
+    if (this.sliderValueLabel) this.sliderValueLabel.textContent = 'Showing all records (No ceiling cap)';
+    this.runSearch();
+  }
+
+  setPlotScope(scope) {
+    this.plotScope = scope;
+    if (this.plotScopeAll) this.plotScopeAll.classList.toggle('active', scope === 'all');
+    if (this.plotScopeHits) this.plotScopeHits.classList.toggle('active', scope === 'hits');
+    if (this.plotScopeOutliers) this.plotScopeOutliers.classList.toggle('active', scope === 'outliers');
+    this.runSearch();
+  }
+
   bindEvents() {
     if (this.mainJsonQueryInput) {
       this.mainJsonQueryInput.addEventListener('input', () => this.validateMainJsonQuery());
@@ -4268,10 +4319,15 @@ class AveLynxPlaygroundApp {
       const v = doc[this.anomalyField];
       if (typeof v !== 'number') return '';
 
-      const pct = Math.min(98, Math.max(2, ((v - minVal) / range) * 100));
       const docId = doc.id || doc._id || ('doc-' + idx);
       const isMatched = hitIdSet.has(docId);
       const isOutlier = anomalySet.has(docId);
+
+      // Check plot scope filtering
+      if (this.plotScope === 'hits' && !isMatched) return '';
+      if (this.plotScope === 'outliers' && !isOutlier) return '';
+
+      const pct = Math.min(98, Math.max(2, ((v - minVal) / range) * 100));
 
       let dotClass = 'dist-dot';
       if (isOutlier) dotClass += ' outlier';
