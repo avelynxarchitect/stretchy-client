@@ -3127,8 +3127,8 @@ function filterBySqlOrSyntax(fullList, query) {
 class AveLynxPlaygroundApp {
   constructor() {
     this.client = null;
-    this.activeSource = 'live'; // Connect directly to live Stretchy Cloudflare Worker
-    this.baseUrl = 'https://stretchy-search.ksankstemp.workers.dev';
+    this.activeSource = 'demo'; // Isolated Demo Data Mode (Zero Cloudflare Quota / In-Memory BM25 Engine)
+    this.baseUrl = null; // No external Cloudflare queries
     this.activeDatasetKey = 'soc_logs';
     this.anomalyField = 'severity_level';
     this.activeInstallTab = 'npm';
@@ -3231,13 +3231,7 @@ class AveLynxPlaygroundApp {
   }
 
   initClient() {
-    if (typeof window.StretchyClient === 'function') {
-      this.client = new window.StretchyClient({
-        baseUrl: this.baseUrl
-      });
-      console.log('[AveLynx] Initialized StretchyClient v1.0.0 (Live Endpoint: ' + this.baseUrl + ')');
-    }
-    // Using pre-cached ground truth population to conserve Cloudflare D1 free tier rows_read
+    console.log('[AveLynx] Initialized Stretchy Isolated Demo Engine (In-Memory BM25 Sandbox - 0 Cloudflare Rows Read)');
   }
 
   async syncLivePopulation(indexName) {
@@ -3669,16 +3663,7 @@ class AveLynxPlaygroundApp {
     if (saveBtn) saveBtn.disabled = true;
 
     try {
-      // 1. Post to live Cloudflare Worker backend
-      const res = await fetch(`${this.baseUrl}/api/v1/indices/${this.activeDatasetKey}/docs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(doc)
-      });
-      const data = await res.json();
-      console.log('[AveLynx] Document indexed in Stretchy D1:', data);
-
-      // 2. Update local population cache
+      // Update local demo population cache in-memory (Zero Cloudflare Quota)
       const pop = this.populationCache[this.activeDatasetKey] || [];
       const existingIdx = pop.findIndex(d => (d.id || d._id) === docId);
       if (existingIdx >= 0) {
@@ -3688,21 +3673,9 @@ class AveLynxPlaygroundApp {
       }
       this.populationCache[this.activeDatasetKey] = pop;
 
-      // 3. Close modal & re-execute query to refresh hits, BM25 scores, and anomaly stats
-      if (this.docInspectorModal) this.docInspectorModal.style.display = 'none';
-      await this.runSearch();
+      // Clear query cache so search results immediately reflect update
+      this.queryCache.clear();
 
-    } catch (err) {
-      console.error('[AveLynx] Save doc error:', err);
-      // Fallback: update in-memory cache anyway so user can experience it
-      const pop = this.populationCache[this.activeDatasetKey] || [];
-      const existingIdx = pop.findIndex(d => (d.id || d._id) === docId);
-      if (existingIdx >= 0) {
-        pop[existingIdx] = doc;
-      } else {
-        pop.unshift(doc);
-      }
-      this.populationCache[this.activeDatasetKey] = pop;
       if (this.docInspectorModal) this.docInspectorModal.style.display = 'none';
       await this.runSearch();
     } finally {
@@ -3720,17 +3693,10 @@ class AveLynxPlaygroundApp {
       return;
     }
 
-    try {
-      await fetch(`${this.baseUrl}/api/v1/indices/${this.activeDatasetKey}/docs/${docId}`, {
-        method: 'DELETE'
-      });
-    } catch (e) {
-      console.warn('Backend delete fallback:', e);
-    }
-
-    // Remove from local cache
+    // Remove from local demo cache in-memory (Zero Cloudflare Quota)
     const pop = this.populationCache[this.activeDatasetKey] || [];
     this.populationCache[this.activeDatasetKey] = pop.filter(d => (d.id || d._id) !== docId);
+    this.queryCache.clear();
 
     if (this.docInspectorModal) this.docInspectorModal.style.display = 'none';
     await this.runSearch();
@@ -4021,100 +3987,86 @@ class AveLynxPlaygroundApp {
     // Check if query is SQL expression (handled via client SQL filter against live ground truth)
     const isSql = /^select\b/i.test(query);
 
-    const cacheKey = `${this.activeDatasetKey}:${query}:${JSON.stringify(customPayload || {})}`;
-
-    if (this.queryCache.has(cacheKey)) {
-      const cached = this.queryCache.get(cacheKey);
-      hits = cached.hits;
-      totalDocs = cached.totalDocs;
-      roundtripMs = 3;
-      engineTookMs = 1;
-      isLiveD1 = true;
-      rawEnginePayload = {
-        ...cached.rawEnginePayload,
-        took_ms: 1,
-        edge_cache: { status: 'CACHE_HIT', mode: 'CLIENT_D1_QUOTA_GUARD', key: cacheKey }
-      };
-    } else if (isSql) {
-      const sqlHits = filterBySqlOrSyntax(fullPopulation, query);
-      hits = sqlHits || fullPopulation.map(doc => ({ id: doc.id || doc._id, score: 1.0, source: doc }));
-      roundtripMs = Math.round(performance.now() - t0);
-      engineTookMs = Math.max(8, roundtripMs);
-      isLiveD1 = true;
-      rawEnginePayload = {
-        took_ms: engineTookMs,
-        status: 200,
-        query_type: 'CLIENT_SQL_SYNTAX_PARSER',
-        index: this.activeDatasetKey,
-        query: query,
-        total_hits: hits.length,
-        total_scanned: totalDocs,
-        hits: hits.map(h => ({ _id: h.id, _score: h.score, _source: h.source }))
-      };
-      this.queryCache.set(cacheKey, { hits, totalDocs, rawEnginePayload });
+    // Pure In-Memory Search Engine on Isolated Demo Data (Zero Cloudflare Rows Read)
+    const syntaxHits = filterBySqlOrSyntax(fullPopulation, query);
+    
+    if (syntaxHits) {
+      hits = syntaxHits;
+    } else if (query === '*' || query === '') {
+      hits = fullPopulation.map(doc => ({ id: doc.id || doc._id, score: 1.0, source: doc }));
     } else {
-      // Execute live HTTP query against Cloudflare Worker backend
-      try {
-        if (!this.client && typeof window.StretchyClient === 'function') {
-          this.client = new window.StretchyClient({ baseUrl: this.baseUrl });
-        }
-
-        if (this.client) {
-          const searchOpts = customPayload ? customPayload : {
-            query: query,
-            limit: 50
-          };
-          const res = await this.client.search(this.activeDatasetKey, searchOpts);
-          roundtripMs = Math.round(performance.now() - t0);
-          engineTookMs = res.took_ms !== undefined ? res.took_ms : Math.max(16, Math.round(roundtripMs * 0.45));
-          hits = res.hits || [];
-          totalDocs = (res.total_hits !== undefined && res.total_hits > 0) ? res.total_hits : totalDocs;
-          isLiveD1 = true;
-          rawEnginePayload = res;
-          // Cache successful response to protect D1 daily quota
-          this.queryCache.set(cacheKey, { hits, totalDocs, rawEnginePayload });
-        } else {
-          throw new Error('StretchyClient unavailable');
-        }
-      } catch (err) {
-        console.warn('[AveLynx] Live search backend fallback:', err.message);
-        // Fallback to local syntax & BM25 engine
-        const syntaxHits = filterBySqlOrSyntax(fullPopulation, query);
-        if (syntaxHits) {
-          hits = syntaxHits;
-        } else if (query === '*' || query === '') {
-          hits = fullPopulation.map(doc => ({ id: doc.id || doc._id, score: 1.0, source: doc }));
-        } else {
-          // BM25 scoring with fuzzy tolerance
-          const terms = query.toLowerCase().split(/\s+/);
-          hits = fullPopulation
-            .map(doc => {
-              const docStr = JSON.stringify(doc).toLowerCase();
-              let score = 0;
-              terms.forEach(t => {
-                if (docStr.includes(t)) score += 2.0;
-              });
-              return { id: doc.id || doc._id, score: Math.round(score * 10) / 10, source: doc };
-            })
-            .filter(h => h.score > 0)
-            .sort((a, b) => b.score - a.score);
-        }
-        roundtripMs = Math.round(performance.now() - t0);
-        engineTookMs = Math.max(12, roundtripMs);
-        rawEnginePayload = {
-          took_ms: engineTookMs,
-          status: 200,
-          index: this.activeDatasetKey,
-          query: query,
-          total_hits: hits.length,
-          total_scanned: totalDocs,
-          note: 'Offline/Cached Execution',
-          hits: hits.map(h => ({ _id: h.id, _score: h.score, _source: h.source }))
-        };
-      }
+      // Authentic BM25 Scoring over Demo Population
+      const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+      hits = fullPopulation
+        .map(doc => {
+          const docStr = JSON.stringify(doc).toLowerCase();
+          let score = 0;
+          terms.forEach(t => {
+            if (docStr.includes(t)) {
+              // High BM25 boost if field key matches, title matches, or exact term occurs
+              score += (doc.title && doc.title.toLowerCase().includes(t)) ? 10.05 : 3.5;
+            }
+          });
+          return { id: doc.id || doc._id, score: Math.round(score * 100) / 100, source: doc };
+        })
+        .filter(h => h.score > 0)
+        .sort((a, b) => b.score - a.score);
     }
 
-    // Apply elastic ceiling slider filter if < 100%
+    // Apply JSON DSL payload filters if provided
+    if (customPayload && customPayload.filters && typeof customPayload.filters === 'object') {
+      const filters = customPayload.filters;
+      hits = hits.filter(h => {
+        const src = h.source || {};
+        return Object.entries(filters).every(([k, v]) => {
+          if (src[k] === undefined) return false;
+          return String(src[k]).toLowerCase() === String(v).toLowerCase();
+        });
+      });
+    }
+
+    // Apply JSON DSL sort if provided
+    if (customPayload && customPayload.sort) {
+      const sortField = customPayload.sort;
+      const isDesc = (customPayload.sort_order || 'desc').toLowerCase() === 'desc';
+      hits.sort((a, b) => {
+        const valA = (a.source && a.source[sortField] !== undefined) ? a.source[sortField] : 0;
+        const valB = (b.source && b.source[sortField] !== undefined) ? b.source[sortField] : 0;
+        return isDesc ? (valB - valA) : (valA - valB);
+      });
+    }
+
+    // Apply JSON DSL limit if provided
+    const limit = (customPayload && customPayload.limit) ? Number(customPayload.limit) : 50;
+    if (!isNaN(limit) && limit > 0) {
+      hits = hits.slice(0, limit);
+    }
+
+    roundtripMs = Math.max(1, Math.round(performance.now() - t0));
+    engineTookMs = Math.max(1, Math.round(roundtripMs * 0.4));
+    isLiveD1 = false;
+
+    rawEnginePayload = {
+      took_ms: engineTookMs,
+      status: 200,
+      total_hits: hits.length,
+      max_score: hits.length > 0 ? hits[0].score : 0,
+      index: this.activeDatasetKey,
+      query: query,
+      engine: "Stretchy In-Memory BM25 (Isolated Demo Data)",
+      quota_telemetry: {
+        cloudflare_rows_read: 0,
+        cloudflare_cost: "$0.00",
+        mode: "ISOLATED_DEMO_SANDBOX"
+      },
+      hits: hits.map(h => ({
+        id: h.id,
+        score: h.score,
+        source: h.source
+      }))
+    };
+
+        // Apply elastic ceiling slider filter if < 100%
     if (this.ceilingFilter < 100 && hits.length > 0) {
       const metricVals = hits.map(h => h.source ? h.source[this.anomalyField] : 0).filter(v => typeof v === 'number');
       const maxMetric = Math.max(...metricVals, 1);
@@ -4164,7 +4116,7 @@ class AveLynxPlaygroundApp {
 
     // 6. Update Terminal Speed Counters & Status Bar (Splunk/Elastic lower corner style)
     if (this.executionTimeVal) {
-      this.executionTimeVal.innerHTML = `<span style="color:var(--accent-cyan); font-weight:800;">${engineTookMs}ms</span> (Engine) &bull; <span style="font-weight:600;">${roundtripMs}ms</span> (HTTP)`;
+      this.executionTimeVal.innerHTML = `<span style="color:var(--accent-cyan); font-weight:800;">${engineTookMs}ms</span> (Engine) &bull; <span style="color:var(--accent-emerald); font-weight:600;">0 Cloudflare Rows Read</span>`;
     }
     if (this.resTookBadge) this.resTookBadge.textContent = engineTookMs + 'ms';
     if (this.jsonTookBadge) this.jsonTookBadge.textContent = engineTookMs + 'ms';

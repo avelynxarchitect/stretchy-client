@@ -21,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="assets/styles.css?v=3.9.0">
+  <link rel="stylesheet" href="assets/styles.css?v=4.0.0">
 
   <!-- Stretchy Client UMD Bundle -->
   <script src="assets/stretchy.umd.js"></script>
@@ -162,8 +162,7 @@
           <div class="playground-source-selector" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary)">Backend:</span>
             <select id="sourceSelect" class="select-input" style="padding: 4px 8px; font-size: 0.8rem;">
-              <option value="live" selected>Live Stretchy D1 Engine (workers.dev)</option>
-              <option value="mock">In-Memory Mock Sandbox</option>
+              <option value="demo" selected>Isolated Demo Data (In-Memory BM25)</option>
             </select>
 
             <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-left: 6px;">Dataset:</span>
@@ -181,7 +180,7 @@
               <span>+ Add Record (JSON Editor)</span>
             </button>
             <span class="pulse-dot" style="background: var(--accent-emerald); width: 7px; height: 7px;"></span>
-            <span style="color: var(--accent-emerald); font-weight: 600;">Live Stretchy D1 Active</span>
+            <span style="color: var(--accent-emerald); font-weight: 600;">Isolated Demo Active (0 Cloudflare Rows Read)</span>
           </div>
         </div>
 
@@ -683,7 +682,7 @@
   </footer>
 
   <!-- Application Logic -->
-  <script src="assets/app.js?v=3.9.0"></script>
+  <script src="assets/app.js?v=4.0.0"></script>
 
   <!-- Document Inspector Modal -->
   <div id="docInspectorModal" class="inspector-modal" style="display: none;">
