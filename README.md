@@ -127,6 +127,50 @@ To deploy to your GitHub Pages:
 
 ---
 
+
+---
+
+## 🦀 Official Rust SDK (`stretchy-rs`)
+
+For native Rust microservices, high-throughput backend services, and air-gapped defense applications, use the official Rust crate located in [`rust/`](rust/):
+
+```toml
+[dependencies]
+stretchy = { git = "https://github.com/avelynxarchitect/stretchy-client", branch = "main" }
+tokio = { version = "1.38", features = ["full"] }
+```
+
+### High-Speed BM25 Search Query (Async Tokio)
+```rust
+use stretchy::{StretchyClient, Result};
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let client = StretchyClient::builder()
+        .base_url("http://127.0.0.1:8080")
+        .build()?;
+
+    let res = client.search("news_articles", "cybersecurity AND incident", 10).await?;
+    println!("Found {} results in {:.2}ms", res.total_hits, res.took_ms);
+    for hit in res.hits {
+        println!("- [{:.2}] ID: {}", hit.score, hit.id);
+    }
+    Ok(())
+}
+```
+
+### Air-Gapped License Verification (Zero-Network)
+```rust
+use stretchy::license::LicenseVerifier;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let license_token = std::fs::read_to_string("/etc/stretchy/license.avx")?;
+    let license = LicenseVerifier::verify(&license_token)?;
+    println!("Valid license for: {} ({} days remaining)", license.customer, license.days_remaining());
+    Ok(())
+}
+```
+
 ## 📄 License
 
 Apache-2.0 © 2026 AveLynx (MYZBROS ENTERPRISES LLC).
