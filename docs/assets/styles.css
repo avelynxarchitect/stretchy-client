@@ -1818,3 +1818,32 @@ body {
 }
 .distribution-dot.is-dimmed { opacity: 0.35; }
 .distribution-dot.is-matched { opacity: 1; transform: scale(1.25); box-shadow: 0 0 10px var(--accent-indigo); }
+
+
+/* Terminal Tab Buttons */
+.term-tab-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.term-tab-btn:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.term-tab-btn.active {
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  border-color: var(--accent-indigo);
+  font-weight: 700;
+}
+.terminal-code-window {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  display: flex;
+  flex-direction: column;
+}

@@ -1,0 +1,13 @@
+BEGIN:VCARD
+VERSION:3.0
+N:AveLynx;;;;
+FN:AveLynx
+ORG:AveLynx Systems;MYZBROS ENTERPRISES LLC
+TITLE:Next-Generation Enterprise Cloud Ecosystem
+EMAIL;TYPE=INTERNET,PREF:support@avelynx.net
+URL:https://avelynx.net
+URL;TYPE=WORK:https://client.avelynx.net
+ADR;TYPE=WORK:;;225 Broadway;San Diego;CA;92101;USA
+LABEL;TYPE=WORK:Regus Downtown\n225 Broadway\nSan Diego, CA 92101\nUSA
+NOTE:Corporate Headquarters: Regus Downtown, 225 Broadway, San Diego, CA 92101. Next-Generation Enterprise Cloud Ecosystem: Sub-15ms Edge Search (Stretchy), Automated Document Intelligence (GrantPulse & DocStudio), Cryptographic Multi-Tenant IAM, Visual Workflow Automation. Inquiries: support@avelynx.net | Web: https://avelynx.net | Built Different.
+END:VCARD

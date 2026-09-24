@@ -3951,3 +3951,43 @@ window.addEventListener('keydown', (e) => {
     window.closeSdkModal();
   }
 });
+
+
+window.switchTerminalTab = function(tab) {
+  const jsonCode = document.getElementById('rawEngineJsonCode');
+  const sdkCode = document.getElementById('codeSnippet');
+  const btnJson = document.getElementById('tabTerminalJson');
+  const btnSdk = document.getElementById('tabTerminalSdk');
+
+  if (tab === 'json') {
+    if (jsonCode) jsonCode.style.display = 'block';
+    if (sdkCode) sdkCode.style.display = 'none';
+    if (btnJson) btnJson.classList.add('active');
+    if (btnSdk) btnSdk.classList.remove('active');
+  } else {
+    if (jsonCode) jsonCode.style.display = 'none';
+    if (sdkCode) sdkCode.style.display = 'block';
+    if (btnJson) btnJson.classList.remove('active');
+    if (btnSdk) btnSdk.classList.add('active');
+  }
+};
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const copyBtn = document.getElementById('terminalCopyBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const isJson = document.getElementById('tabTerminalJson')?.classList.contains('active');
+      const text = isJson 
+        ? document.getElementById('rawEngineJsonCode')?.textContent 
+        : document.getElementById('codeSnippet')?.textContent;
+      if (text) {
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = copyBtn.innerHTML;
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => { copyBtn.innerHTML = orig; }, 2000);
+        });
+      }
+    });
+  }
+});

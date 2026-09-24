@@ -156,216 +156,212 @@
         </p>
       </div>
 
-      <div class="playground-card workbench-card">
+      <div class="playground-card">
         <!-- Educational Guided Intro Banner -->
         <div class="playground-guided-banner">
           <div class="guided-banner-icon">💡</div>
           <div class="guided-banner-content">
             <strong>Interactive Search Workbench:</strong>
-            Configure queries, choose index datasets, and set dynamic cut ceilings on the left. Inspect real-time <strong>BM25 relevance hits</strong>, <strong>sub-15ms edge execution timing</strong>, and <strong>statistical anomaly profiling</strong> on the right.
+            Configure queries, choose isolated datasets, and set dynamic cut ceilings above. Inspect real-time <strong>BM25 relevance hits</strong> on the left, and view the live <strong>engine response terminal &amp; speed telemetry</strong> on the right.
           </div>
         </div>
 
-        <!-- 2-Pane Workbench Container -->
-        <div class="workbench-layout terminal-workbench">
-          <!-- LEFT PANE: QUERY BUILDER & CONTROLS -->
-          <aside class="workbench-sidebar query-controls-sidebar">
-            <div class="pane-header">
-              <div class="pane-header-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-indigo);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <span>Query Builder</span>
+        <!-- Toolbar -->
+        <div class="playground-toolbar">
+          <div class="playground-source-selector">
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary)">Backend:</span>
+            <select id="sourceSelect" class="select-input">
+              <option value="live" selected>Live Stretchy D1 Engine (workers.dev)</option>
+              <option value="mock">In-Memory Mock Sandbox</option>
+            </select>
+
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-left: 8px;">Dataset:</span>
+            <select id="datasetSelect" class="select-input" onchange="window.app && window.app.onDatasetChange(this.value)">
+              <option value="soc_logs" selected>Cybersecurity SOC Telemetry (64 logs)</option>
+              <option value="demo_cyber_threats">Global Cyber Threat Telemetry (15 nodes)</option>
+              <option value="demo_ecommerce_bi">Global E-Commerce Revenue BI (20 hubs)</option>
+              <option value="demo_grant_portfolio">Clean Energy &amp; Public Grants (12 awards)</option>
+            </select>
+          </div>
+
+          <div style="font-size: 0.825rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+            <span class="pulse-dot" style="background: var(--accent-emerald);"></span>
+            <span>Live Stretchy D1 Active</span>
+          </div>
+        </div>
+
+        <!-- Query Input Bar -->
+        <div class="playground-query-bar">
+          <div class="query-input-wrapper">
+            <svg class="query-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="queryInput" class="query-input" placeholder="Type a search query or syntax (e.g. 'exfiltration', 'threat_score:[80 TO 100]', or '*' for all)..." value="exfiltration">
+          </div>
+          <button id="searchBtn" class="btn btn-primary" style="padding: 14px 24px;">Execute Query</button>
+        </div>
+
+        <!-- Suggested Example Queries Bar -->
+        <div style="padding: 0 24px 16px;">
+          <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.05em;">SUGGESTED QUERIES (CLICK TO RUN):</div>
+          <div class="tqq-chips">
+            <button type="button" class="tqq-chip active" data-dataset="soc_logs" data-query="exfiltration" onclick="window.app && window.app.selectSuggestedQuery(this)">
+              <span class="tqq-tag soc">SOC</span>
+              <span class="tqq-text">🚨 Threat Egress ("exfiltration")</span>
+            </button>
+            <button type="button" class="tqq-chip" data-dataset="soc_logs" data-query="CRITICAL" onclick="window.app && window.app.selectSuggestedQuery(this)">
+              <span class="tqq-tag soc">WAF</span>
+              <span class="tqq-text">🛡️ Critical WAF Events ("CRITICAL")</span>
+            </button>
+            <button type="button" class="tqq-chip" data-dataset="demo_cyber_threats" data-query="threat_score:[80 TO 100]" onclick="window.app && window.app.selectSuggestedQuery(this)">
+              <span class="tqq-tag prod">THREAT</span>
+              <span class="tqq-text">⚡ High Threat Outliers (score &ge; 80)</span>
+            </button>
+            <button type="button" class="tqq-chip" data-dataset="demo_cyber_threats" data-query="latency_ms:[150 TO 300]" onclick="window.app && window.app.selectSuggestedQuery(this)">
+              <span class="tqq-tag prod">LATENCY</span>
+              <span class="tqq-text">📡 Edge Latency Range [150 TO 300ms]</span>
+            </button>
+            <button type="button" class="tqq-chip" data-dataset="demo_ecommerce_bi" data-query="gross_revenue:[500000 TO 1500000]" onclick="window.app && window.app.selectSuggestedQuery(this)">
+              <span class="tqq-tag prod">BI</span>
+              <span class="tqq-text">💼 Top Revenue Hubs ($500k - $1.5M)</span>
+            </button>
+            <button type="button" class="tqq-chip" data-dataset="demo_grant_portfolio" data-query="amount_awarded:[250000 TO 1200000]" onclick="window.app && window.app.selectSuggestedQuery(this)">
+              <span class="tqq-tag grant">GRANT</span>
+              <span class="tqq-text">💰 High Impact Awards (&ge; $250k)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Query Slicer Dynamic Gauge -->
+        <div class="slicer-panel">
+          <div class="slicer-header">
+            <span id="slicerLabel" class="slicer-label">Slice: 100% of Dataset</span>
+            <span id="slicerStats" class="slicer-stats">2 / 64 documents</span>
+          </div>
+          <div class="slicer-track">
+            <div id="slicerFill" class="slicer-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <!-- Probabilistic Anomaly Detector Widget -->
+        <div class="anomaly-widget">
+          <div class="anomaly-header">
+            <div class="anomaly-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-indigo)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <span>Probabilistic Statistical Profiling Engine</span>
+            </div>
+            <div id="anomalyPill" class="anomaly-pill clean">Normal Distribution</div>
+          </div>
+
+          <div class="stat-chips-grid">
+            <div class="stat-chip">
+              <div class="stat-chip-label">Population (N)</div>
+              <div id="statPopN" class="stat-chip-value">64 docs</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-chip-label">Mean (&mu;)</div>
+              <div id="statMean" class="stat-chip-value">--</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-chip-label">StdDev (&sigma;)</div>
+              <div id="statStdDev" class="stat-chip-value">--</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-chip-label">Median (p50)</div>
+              <div id="statMedian" class="stat-chip-value">--</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-chip-label">IQR (Q3-Q1)</div>
+              <div id="statIQR" class="stat-chip-value">--</div>
+            </div>
+            <div class="stat-chip">
+              <div class="stat-chip-label">Outliers (z &ge; 2.2)</div>
+              <div id="statOutliers" class="stat-chip-value" style="color: var(--accent-rose)">0</div>
+            </div>
+          </div>
+
+          <!-- Visual Distribution Strip -->
+          <div class="distribution-strip-container">
+            <div class="distribution-strip-header">
+              <span class="distribution-strip-title">Visual Metric Distribution Plot</span>
+              <span class="distribution-strip-legend">
+                <span class="dot-legend-item"><span class="legend-dot normal"></span> Normal Items</span>
+                <span class="dot-legend-item"><span class="legend-dot outlier"></span> Statistical Outlier (z &ge; 2.2)</span>
+              </span>
+            </div>
+            <div class="distribution-axis-wrap">
+              <div id="distributionTrack" class="distribution-track" title="Click any data point to highlight that document">
+                <!-- Dynamically populated with interactive glowing dots -->
               </div>
-              <span class="engine-badge">Stretchy D1 Engine</span>
-            </div>
-
-            <!-- 1. Search Query Input -->
-            <div class="qb-group">
-              <label class="qb-label" for="queryInput">Search Query / Syntax</label>
-              <div class="query-input-wrapper">
-                <svg class="query-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="queryInput" class="query-input" placeholder="Type query or syntax (e.g. 'exfiltration', 'latency_ms:[100 TO 200]')..." value="exfiltration">
+              <div class="distribution-axis-labels">
+                <span id="distMinLabel">0</span>
+                <span id="distMeanLabel" class="dist-mean-indicator">&mu; (Mean)</span>
+                <span id="distMaxLabel">Max</span>
               </div>
             </div>
+          </div>
 
-            <!-- 2. Target Dataset Selector -->
-            <div class="qb-group">
-              <label class="qb-label" for="datasetSelect">Target Index / Isolated Dataset</label>
-              <select id="datasetSelect" class="select-input full-width" onchange="window.app && window.app.onDatasetChange(this.value)">
-                <option value="soc_logs" selected>index: soc_logs (64 Security Logs &amp; WAF)</option>
-                <option value="demo_cyber_threats">index: demo_cyber_threats (15 Global Threat Nodes)</option>
-                <option value="demo_ecommerce_bi">index: demo_ecommerce_bi (20 Global Commerce Hubs)</option>
-                <option value="demo_grant_portfolio">index: demo_grant_portfolio (12 Clean Energy Grants)</option>
-              </select>
+          <!-- Elastic Ceiling Range Filter -->
+          <div class="elastic-slider-bar">
+            <div class="elastic-slider-info">
+              <span class="slider-title">Dynamic Elastic Cut Filter:</span>
+              <span id="sliderValueLabel" class="slider-value">Showing all records (No ceiling cap)</span>
             </div>
+            <div class="elastic-slider-control">
+              <input type="range" id="elasticCeilingSlider" min="10" max="100" value="100" class="elastic-range-input">
+              <button id="sliderResetBtn" class="slider-reset-btn" type="button" title="Reset ceiling filter">Reset</button>
+            </div>
+          </div>
+        </div>
 
-            <!-- 3. Suggested Example Queries -->
-            <div class="qb-group">
-              <label class="qb-label">Suggested Example Queries</label>
-              <div class="tqq-chips">
-                <button type="button" class="tqq-chip active" data-dataset="soc_logs" data-query="exfiltration" onclick="window.app && window.app.selectSuggestedQuery(this)">
-                  <span class="tqq-tag soc">SOC</span>
-                  <span class="tqq-text">🚨 Threat Egress ("exfiltration")</span>
-                </button>
-                <button type="button" class="tqq-chip" data-dataset="soc_logs" data-query="CRITICAL" onclick="window.app && window.app.selectSuggestedQuery(this)">
-                  <span class="tqq-tag soc">WAF</span>
-                  <span class="tqq-text">🛡️ Critical WAF Events ("CRITICAL")</span>
-                </button>
-                <button type="button" class="tqq-chip" data-dataset="demo_cyber_threats" data-query="threat_score:[80 TO 100]" onclick="window.app && window.app.selectSuggestedQuery(this)">
-                  <span class="tqq-tag prod">THREAT</span>
-                  <span class="tqq-text">⚡ High Threat Outliers (score &ge; 80)</span>
-                </button>
-                <button type="button" class="tqq-chip" data-dataset="demo_cyber_threats" data-query="latency_ms:[150 TO 300]" onclick="window.app && window.app.selectSuggestedQuery(this)">
-                  <span class="tqq-tag prod">LATENCY</span>
-                  <span class="tqq-text">📡 Edge Latency Range [150 TO 300ms]</span>
-                </button>
-                <button type="button" class="tqq-chip" data-dataset="demo_ecommerce_bi" data-query="gross_revenue:[500000 TO 1500000]" onclick="window.app && window.app.selectSuggestedQuery(this)">
-                  <span class="tqq-tag prod">BI</span>
-                  <span class="tqq-text">💼 Top Revenue Hubs ($500k - $1.5M)</span>
-                </button>
-                <button type="button" class="tqq-chip" data-dataset="demo_grant_portfolio" data-query="amount_awarded:[250000 TO 1200000]" onclick="window.app && window.app.selectSuggestedQuery(this)">
-                  <span class="tqq-tag grant">GRANT</span>
-                  <span class="tqq-text">💰 High Impact Awards (&ge; $250k)</span>
-                </button>
+        <!-- Results Grid (Left) & Terminal Window (Right) -->
+        <div class="playground-body">
+          <!-- LEFT PANE: RESULTS -->
+          <div class="results-pane">
+            <div class="results-header">
+              <span id="resultsCountLabel">0 results matched</span>
+              <span>Sorted by BM25 Relevance &bull; Click card to inspect payload</span>
+            </div>
+            <div id="resultsContainer">
+              <!-- Dynamically populated by app.js -->
+            </div>
+          </div>
+
+          <!-- RIGHT PANE: TERMINAL WINDOW -->
+          <div class="code-pane terminal-code-window">
+            <div class="code-header">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="terminal-traffic-lights" style="display: flex; gap: 5px;">
+                  <span class="light red" style="width: 9px; height: 9px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+                  <span class="light yellow" style="width: 9px; height: 9px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
+                  <span class="light green" style="width: 9px; height: 9px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                </div>
+                <div class="terminal-view-switch" style="display: flex; gap: 4px; margin-left: 8px;">
+                  <button type="button" id="tabTerminalJson" class="term-tab-btn active" onclick="window.switchTerminalTab('json')">Raw Engine JSON</button>
+                  <button type="button" id="tabTerminalSdk" class="term-tab-btn" onclick="window.switchTerminalTab('sdk')">Client SDK Code</button>
+                </div>
               </div>
-            </div>
-
-            <!-- 4. Elastic Ceiling Cut Slider -->
-            <div class="qb-group">
-              <div class="qb-label-row">
-                <label class="qb-label" for="elasticCeilingSlider">Elastic Cutoff Ceiling</label>
-                <button id="sliderResetBtn" class="reset-link-btn" type="button">Reset</button>
-              </div>
-              <div class="slider-subtext" id="sliderValueLabel">Showing all records (No ceiling cap)</div>
-              <input type="range" id="elasticCeilingSlider" min="10" max="100" value="100" class="elastic-range-input full-width">
-            </div>
-
-            <!-- 5. Action Buttons -->
-            <div class="qb-actions">
-              <button id="searchBtn" class="btn btn-primary full-width" style="justify-content: center; gap: 8px;">
-                <span>▶ Run Live Query</span>
-                <kbd class="t-kbd" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2); font-size: 0.7rem; padding: 2px 5px; border-radius: 3px;">Enter</kbd>
+              <button class="copy-btn copy-trigger" id="terminalCopyBtn" data-copy="" style="font-size: 0.75rem; padding: 4px 8px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy
               </button>
-              <button id="toggleCodeDrawerBtn" class="btn btn-secondary full-width" type="button" onclick="window.openSdkModal()" style="justify-content: center; gap: 8px; margin-top: 8px; font-size: 0.825rem;">
-                &lt;/&gt; View Generated SDK Code
-              </button>
             </div>
-            <select id="sourceSelect" style="display: none;"><option value="live" selected>Live</option></select>
-          </aside>
 
-          <!-- RIGHT PANE: TERMINAL WINDOW (Elastic / Splunk Console Style) -->
-          <main class="workbench-main terminal-window-pane">
-            <div class="terminal-frame">
-              <!-- Terminal Titlebar with Traffic Lights & View Tabs -->
-              <div class="terminal-titlebar">
-                <div class="terminal-title-left">
-                  <div class="terminal-traffic-lights">
-                    <span class="light red"></span>
-                    <span class="light yellow"></span>
-                    <span class="light green"></span>
-                  </div>
-                  <span class="terminal-tab-title">stretchy-console</span>
-                </div>
+            <!-- Terminal Monospace Screen -->
+            <pre class="code-pre" style="flex: 1; min-height: 380px; max-height: 480px; overflow-y: auto;"><code id="rawEngineJsonCode">// Loading live engine response...</code><code id="codeSnippet" style="display: none;">// Loading SDK code...</code></pre>
 
-                <div class="response-view-tabs" id="responseViewTabs">
-                  <button type="button" class="res-tab-btn active" data-res-view="hits">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                    Formatted Hits (<span id="resultsCountTab">2</span>)
-                  </button>
-                  <button type="button" class="res-tab-btn" data-res-view="json">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                    Raw Engine JSON (<span id="jsonTookBadge">38ms</span>)
-                  </button>
-                  <button type="button" class="res-tab-btn" data-res-view="stats">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    Baseline Profiler
-                  </button>
-                </div>
-
-                <div class="terminal-meta-telemetry">
-                  <span class="meta-item"><span class="meta-dot"></span> <strong id="resStatusBadge">200 OK</strong></span>
-                  <span class="meta-item">took: <strong id="resTookBadge">38ms</strong></span>
-                </div>
+            <!-- Lower Corner Speed Counter & Status Bar -->
+            <div class="terminal-footer-status" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #070b14; border-top: 1px solid rgba(255,255,255,0.08); font-family: var(--font-mono); font-size: 0.75rem; margin-top: auto; border-radius: 0 0 var(--radius-md) var(--radius-md);">
+              <div class="terminal-status-left" style="display: flex; align-items: center; gap: 6px; color: var(--text-muted);">
+                <span class="status-indicator-dot online" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981; display: inline-block;"></span>
+                <span class="status-http" id="terminalHttpStatus" style="color: #10b981; font-weight: 700;">200 OK &bull; Live Stretchy D1</span>
+                <span class="status-sep" style="color: rgba(255,255,255,0.2);">&bull;</span>
+                <span class="status-hits" id="terminalHitsStatus">2 hits</span>
               </div>
-
-              <!-- Terminal Prompt Line Echo -->
-              <div class="terminal-prompt-strip">
-                <span class="t-prompt">stretchy&gt;</span>
-                <span class="t-echo-cmd" id="terminalPromptEcho">exfiltration</span>
-                <span class="t-cursor">_</span>
-              </div>
-
-              <!-- Terminal Screen Body -->
-              <div class="terminal-screen-body">
-                <!-- VIEW 1: Formatted Document Hits -->
-                <div class="response-view-content active" id="viewHits">
-                  <div class="hits-summary-strip">
-                    <span id="resultsCountLabel">2 results matched</span>
-                    <span class="hss-right">Sorted by BM25 Relevance &bull; Click card to inspect payload</span>
-                  </div>
-                  <div id="resultsContainer" class="results-container-scroll">
-                    <!-- Dynamically populated cards -->
-                  </div>
-                </div>
-
-                <!-- VIEW 2: Raw Engine JSON Response -->
-                <div class="response-view-content" id="viewJson" style="display: none;">
-                  <div class="json-viewer-header">
-                    <span>STRETCHY ENGINE HTTP RESPONSE (200 OK)</span>
-                    <button type="button" class="btn btn-secondary btn-sm" id="copyRawJsonBtn">Copy JSON Payload</button>
-                  </div>
-                  <pre class="terminal-raw-json"><code id="rawEngineJsonCode">// Loading JSON...</code></pre>
-                </div>
-
-                <!-- VIEW 3: Baseline Population & Statistical Profiler -->
-                <div class="response-view-content" id="viewStats" style="display: none;">
-                  <div class="stats-profiler-panel">
-                    <div class="profiler-header">
-                      <div class="profiler-title">
-                        <span>Index Population Baseline vs Query Match</span>
-                      </div>
-                      <div id="anomalyPill" class="anomaly-pill detected">0 Outliers Detected</div>
-                    </div>
-
-                    <div class="stat-summary-bar">
-                      <div class="sum-chip"><span class="sum-label">Population (N):</span> <span id="statPopN" class="sum-val">64 docs</span></div>
-                      <div class="sum-chip"><span class="sum-label">Baseline Mean (&mu;):</span> <span id="statMean" class="sum-val">--</span></div>
-                      <div class="sum-chip"><span class="sum-label">Baseline StdDev (&sigma;):</span> <span id="statStdDev" class="sum-val">--</span></div>
-                      <div class="sum-chip"><span class="sum-label">Baseline Median:</span> <span id="statMedian" class="sum-val">--</span></div>
-                      <div class="sum-chip"><span class="sum-label">Baseline IQR:</span> <span id="statIQR" class="sum-val">--</span></div>
-                      <div class="sum-chip"><span class="sum-label">Outliers in Match:</span> <span id="statOutliers" class="sum-val">0</span></div>
-                    </div>
-
-                    <!-- Dot Plot Track with Population Baseline -->
-                    <div class="distribution-track-wrapper">
-                      <div id="distributionTrack" class="distribution-track" title="Click any data point to highlight document">
-                        <!-- Dynamically populated dots -->
-                      </div>
-                      <div class="distribution-axis-labels">
-                        <span id="distMinLabel">0</span>
-                        <span id="distMeanLabel" class="dist-mean-indicator">&mu; (Mean)</span>
-                        <span id="distMaxLabel">100</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Lower Corner Terminal Speed & Status Counter (Elastic/Splunk Style) -->
-              <div class="terminal-slice-track"><div id="slicerFill" class="slice-fill-bar" style="width: 100%;"></div></div>
-              <div class="terminal-footer-status">
-                <div class="terminal-status-left">
-                  <span class="status-indicator-dot online"></span>
-                  <span class="status-http" id="terminalHttpStatus">200 OK &bull; stretchy-search (Cloudflare D1)</span>
-                  <span class="status-sep">&bull;</span>
-                  <span class="status-hits" id="terminalHitsStatus">2 hits (3% of 64 docs)</span>
-                </div>
-                <div class="terminal-speed-counter" id="terminalSpeedCounter">
-                  <span class="tsc-icon">⚡</span>
-                  <span class="tsc-time" id="executionTimeVal"><span style="color:var(--accent-cyan); font-weight:800;">38ms</span> (Engine) &bull; <span style="font-weight:600;">240ms</span> (HTTP)</span>
-                </div>
+              <div class="terminal-speed-counter" id="terminalSpeedCounter">
+                <span class="tsc-icon">⚡</span>
+                <span class="tsc-time" id="executionTimeVal"><span style="color:var(--accent-cyan); font-weight:800;">38ms</span> (Engine) &bull; <span style="font-weight:600;">240ms</span> (HTTP)</span>
               </div>
             </div>
-          </main>
+          </div>
         </div>
       </div>
     </div>
@@ -585,6 +581,7 @@
           <div class="footer-col-title">Resources</div>
           <ul class="footer-links">
             <li><a href="#playground" class="footer-link">Live Playground</a></li>
+            <li><a href="card.html" class="footer-link">Digital Business Card</a></li>
             <li><a href="#downloads" class="footer-link">SDK Downloads</a></li>
             <li><a href="#api" class="footer-link">API Documentation</a></li>
             <li><a href="https://github.com/avelynxarchitect/stretchy-client" class="footer-link">GitHub Source</a></li>
