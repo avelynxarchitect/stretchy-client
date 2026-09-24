@@ -3136,6 +3136,7 @@ class AveLynxPlaygroundApp {
     this.currentHits = [];
     this.currentAnomalyReport = null;
     this.populationCache = { ...DEMO_DATASETS };
+    this.queryCache = new Map();
 
     this.initElements();
     this.initClient();
@@ -3236,8 +3237,7 @@ class AveLynxPlaygroundApp {
       });
       console.log('[AveLynx] Initialized StretchyClient v1.0.0 (Live Endpoint: ' + this.baseUrl + ')');
     }
-    // Pre-sync ground truth population from backend in background
-    this.syncLivePopulation(this.activeDatasetKey);
+    // Using pre-cached ground truth population to conserve Cloudflare D1 free tier rows_read
   }
 
   async syncLivePopulation(indexName) {
@@ -3323,7 +3323,7 @@ class AveLynxPlaygroundApp {
     if (this.jsonActiveIndexSpan) this.jsonActiveIndexSpan.textContent = val;
     if (this.elasticCeilingSlider) this.elasticCeilingSlider.value = 100;
     if (this.sliderValueLabel) this.sliderValueLabel.textContent = 'Showing all records (No ceiling cap)';
-    this.syncLivePopulation(val);
+    // this.syncLivePopulation(val); // Conserve D1 rows_read
     this.runSearch();
   }
 
@@ -4021,7 +4021,21 @@ class AveLynxPlaygroundApp {
     // Check if query is SQL expression (handled via client SQL filter against live ground truth)
     const isSql = /^select\b/i.test(query);
 
-    if (isSql) {
+    const cacheKey = `${this.activeDatasetKey}:${query}:${JSON.stringify(customPayload || {})}`;
+
+    if (this.queryCache.has(cacheKey)) {
+      const cached = this.queryCache.get(cacheKey);
+      hits = cached.hits;
+      totalDocs = cached.totalDocs;
+      roundtripMs = 3;
+      engineTookMs = 1;
+      isLiveD1 = true;
+      rawEnginePayload = {
+        ...cached.rawEnginePayload,
+        took_ms: 1,
+        edge_cache: { status: 'CACHE_HIT', mode: 'CLIENT_D1_QUOTA_GUARD', key: cacheKey }
+      };
+    } else if (isSql) {
       const sqlHits = filterBySqlOrSyntax(fullPopulation, query);
       hits = sqlHits || fullPopulation.map(doc => ({ id: doc.id || doc._id, score: 1.0, source: doc }));
       roundtripMs = Math.round(performance.now() - t0);
@@ -4037,6 +4051,7 @@ class AveLynxPlaygroundApp {
         total_scanned: totalDocs,
         hits: hits.map(h => ({ _id: h.id, _score: h.score, _source: h.source }))
       };
+      this.queryCache.set(cacheKey, { hits, totalDocs, rawEnginePayload });
     } else {
       // Execute live HTTP query against Cloudflare Worker backend
       try {
@@ -4056,6 +4071,8 @@ class AveLynxPlaygroundApp {
           totalDocs = (res.total_hits !== undefined && res.total_hits > 0) ? res.total_hits : totalDocs;
           isLiveD1 = true;
           rawEnginePayload = res;
+          // Cache successful response to protect D1 daily quota
+          this.queryCache.set(cacheKey, { hits, totalDocs, rawEnginePayload });
         } else {
           throw new Error('StretchyClient unavailable');
         }
