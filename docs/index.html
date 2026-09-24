@@ -21,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="assets/styles.css?v=2.2.0">
+  <link rel="stylesheet" href="assets/styles.css?v=3.0.0">
 
   <!-- Stretchy Client UMD Bundle -->
   <script src="assets/stretchy.umd.js"></script>
@@ -167,239 +167,177 @@
         </div>
 
         <!-- 2-Pane Workbench Container -->
-        <div class="workbench-layout">
-          <!-- LEFT PANE: QUERY BUILDER (Unified & Streamlined) -->
-          <aside class="workbench-sidebar query-builder-pane">
-            <div class="pane-header">
-              <div class="pane-header-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-indigo);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <span>Query Builder</span>
-              </div>
-              <span class="engine-badge">BM25 Engine</span>
-            </div>
-
-            <!-- 1. Search Query Input -->
-            <div class="qb-group">
-              <label class="qb-label" for="queryInput">Search Query</label>
-              <div class="query-input-wrapper">
-                <svg class="query-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="queryInput" class="query-input" placeholder="Type a search query or SQL..." value="*">
-              </div>
-
-              <!-- Quick Query Syntax Pills -->
-              <div class="query-mode-pills" id="queryModePills">
-                <button type="button" class="mode-pill active" data-mode-query="*">All (*)</button>
-                <button type="button" class="mode-pill" data-mode-query="category:electronics">category:electronics</button>
-                <button type="button" class="mode-pill" data-mode-query="noiz canclling">noiz canclling (Fuzzy)</button>
-              </div>
-            </div>
-
-            <!-- 2. Unified Suggested Queries (Natural Language & SQL) -->
-            <div class="qb-group suggested-queries-group">
-              <div class="qb-label-row">
-                <label class="qb-label">Suggested Queries</label>
-                <div class="sq-tabs-nav" id="sqTabsNav">
-                  <button type="button" class="sq-tab-btn active" data-sq-tab="nl">Natural Language</button>
-                  <button type="button" class="sq-tab-btn" data-sq-tab="syntax">SQL &amp; Stretchy</button>
+        <div class="workbench-layout terminal-workbench">
+          <!-- LEFT PANE: QUERY TERMINAL (Elastic / Splunk Console Style) -->
+          <aside class="workbench-sidebar terminal-sidebar">
+            <div class="terminal-frame">
+              <div class="terminal-titlebar">
+                <div class="terminal-traffic-lights">
+                  <span class="light red"></span>
+                  <span class="light yellow"></span>
+                  <span class="light green"></span>
+                </div>
+                <span class="terminal-tab-title">stretchy-console</span>
+                <div class="terminal-dataset-picker">
+                  <select id="datasetSelect" class="terminal-select" onchange="window.app && window.app.onDatasetChange(this.value)">
+                    <option value="soc_logs" selected>index: soc_logs (8 docs)</option>
+                    <option value="products">index: products (12 docs)</option>
+                    <option value="grants">index: grants (4 docs)</option>
+                  </select>
                 </div>
               </div>
 
-              <!-- Natural Language Tab -->
-              <div class="sq-tab-pane active" id="sqTabNl">
-                <div class="suggested-queries-list">
-                  <button type="button" class="suggested-query-item active" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="soc_logs" data-query="exfiltration probe burst" title="Click to run in SOC Telemetry">
-                    <span class="sqi-badge nl-badge">NL</span>
-                    <span class="sqi-text">"Detect security exfiltration burst over 500ms"</span>
-                    <span class="sqi-dataset-tag">SOC</span>
-                  </button>
-                  <button type="button" class="suggested-query-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="grants" data-query="statewide infrastructure capital" title="Click to run in Grants">
-                    <span class="sqi-badge nl-badge">NL</span>
-                    <span class="sqi-text">"High-value government capital grant anomalies"</span>
-                    <span class="sqi-dataset-tag">Grants</span>
-                  </button>
-                  <button type="button" class="suggested-query-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="products" data-query="wireless noise cancelling headphones" title="Click to run in Products">
-                    <span class="sqi-badge nl-badge">NL</span>
-                    <span class="sqi-text">"Wireless noise-cancelling headphones"</span>
-                    <span class="sqi-dataset-tag">Products</span>
-                  </button>
-                  <button type="button" class="suggested-query-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="soc_logs" data-query="iam-auth login success" title="Click to run in SOC Telemetry">
-                    <span class="sqi-badge nl-badge">NL</span>
-                    <span class="sqi-text">"Find IAM auth success telemetry logs"</span>
-                    <span class="sqi-dataset-tag">SOC</span>
-                  </button>
+              <!-- Terminal Query Input -->
+              <div class="terminal-input-body">
+                <div class="terminal-prompt-line">
+                  <span class="t-prompt">stretchy&gt;</span>
+                  <input type="text" id="queryInput" class="terminal-input" placeholder="Enter query, SPL, or SQL (e.g. 'exfiltration', 'latency_ms > 500', or '*')..." value="*">
                 </div>
               </div>
 
-              <!-- SQL & Stretchy Syntax Tab -->
-              <div class="sq-tab-pane" id="sqTabSyntax" style="display: none;">
-                <div class="suggested-queries-list">
-                  <button type="button" class="suggested-query-item syntax-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="soc_logs" data-query="SELECT * FROM soc_logs WHERE latency_ms > 500" title="Click to run SQL query">
-                    <span class="sqi-badge sql-badge">SQL</span>
-                    <code class="sqi-code">SELECT * WHERE latency_ms &gt; 500</code>
-                    <span class="sqi-dataset-tag">SOC</span>
-                  </button>
-                  <button type="button" class="suggested-query-item syntax-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="grants" data-query="SELECT * FROM grants WHERE amount >= 100000" title="Click to run SQL query">
-                    <span class="sqi-badge sql-badge">SQL</span>
-                    <code class="sqi-code">SELECT * WHERE amount &gt;= 100000</code>
-                    <span class="sqi-dataset-tag">Grants</span>
-                  </button>
-                  <button type="button" class="suggested-query-item syntax-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="products" data-query="category:electronics price:<=250" title="Click to run Stretchy syntax">
-                    <span class="sqi-badge stretchy-badge">SYNTAX</span>
-                    <code class="sqi-code">category:electronics price:&lt;=250</code>
-                    <span class="sqi-dataset-tag">Products</span>
-                  </button>
-                  <button type="button" class="suggested-query-item syntax-item" onclick="window.app && window.app.selectSuggestedQuery(this)" data-dataset="soc_logs" data-query="service:gateway threat_score:>=90" title="Click to run Stretchy syntax">
-                    <span class="sqi-badge stretchy-badge">SYNTAX</span>
-                    <code class="sqi-code">service:gateway threat_score:&gt;=90</code>
-                    <span class="sqi-dataset-tag">SOC</span>
-                  </button>
+              <!-- Lower Corner Terminal Speed & Status Counter (Elastic/Splunk Style) -->
+              <div class="terminal-slice-track"><div id="slicerFill" class="slice-fill-bar" style="width: 100%;"></div></div>
+              <div class="terminal-footer-status">
+                <div class="terminal-status-left">
+                  <span class="status-indicator-dot online"></span>
+                  <span class="status-http" id="terminalHttpStatus">200 OK</span>
+                  <span class="status-sep">&bull;</span>
+                  <span class="status-hits" id="terminalHitsStatus">8 hits (100% of 8 docs)</span>
+                </div>
+                <div class="terminal-speed-counter" id="terminalSpeedCounter">
+                  <span class="tsc-icon">⚡</span>
+                  <span class="tsc-time" id="executionTimeVal">11 ms</span>
                 </div>
               </div>
             </div>
 
-            <!-- 3. Target Dataset Selector -->
-            <div class="qb-group">
-              <label class="qb-label" for="datasetSelect">Target Index / Dataset</label>
-              <select id="datasetSelect" class="select-input full-width" onchange="window.app && window.app.onDatasetChange(this.value)">
-                <option value="soc_logs" selected>Cybersecurity SOC Telemetry (8 logs)</option>
-                <option value="products">E-Commerce Products (12 items)</option>
-                <option value="grants">Grant &amp; Tax Documents (4 items)</option>
-              </select>
+            <!-- Terminal Quick Query Chips -->
+            <div class="terminal-quick-queries">
+              <div class="tqq-header">
+                <span class="tqq-label">EXAMPLE QUERIES:</span>
+              </div>
+              <div class="tqq-chips">
+                <button type="button" class="tqq-chip active" data-dataset="soc_logs" data-query="exfiltration probe burst" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                  <span class="tqq-tag soc">SOC</span>
+                  <span class="tqq-text">🚨 Threat Spike ("exfiltration probe burst")</span>
+                </button>
+                <button type="button" class="tqq-chip" data-dataset="soc_logs" data-query="SELECT * FROM soc_logs WHERE latency_ms > 500" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                  <span class="tqq-tag soc">SQL</span>
+                  <span class="tqq-text">SELECT * WHERE latency_ms &gt; 500</span>
+                </button>
+                <button type="button" class="tqq-chip" data-dataset="products" data-query="noiz canclling" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                  <span class="tqq-tag prod">BM25</span>
+                  <span class="tqq-text">🎯 Typo Tolerance ("noiz canclling")</span>
+                </button>
+                <button type="button" class="tqq-chip" data-dataset="grants" data-query="SELECT * FROM grants WHERE amount >= 100000" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                  <span class="tqq-tag grant">SQL</span>
+                  <span class="tqq-text">💰 Grants WHERE amount &gt;= 100,000</span>
+                </button>
+                <button type="button" class="tqq-chip" data-dataset="products" data-query="category:electronics price:<=250" onclick="window.app && window.app.selectSuggestedQuery(this)">
+                  <span class="tqq-tag prod">SYNTAX</span>
+                  <span class="tqq-text">category:electronics price:&lt;=250</span>
+                </button>
+              </div>
             </div>
 
-            <!-- 4. Execution Layer Selector -->
-            <div class="qb-group">
-              <label class="qb-label" for="sourceSelect">Execution Layer</label>
-              <select id="sourceSelect" class="select-input full-width">
-                <option value="mock" selected>In-Memory Mock Sandbox (Instant, Zero Setup)</option>
-                <option value="live">Live Edge Worker (https://search.avelynx.net)</option>
-              </select>
-            </div>
-
-            <!-- 5. Dynamic Elastic Ceiling Cut Slider -->
-            <div class="qb-group">
-              <div class="qb-label-row">
-                <label class="qb-label" for="elasticCeilingSlider">Elastic Ceiling Cut</label>
+            <!-- Execution & Ceiling Controls -->
+            <div class="terminal-actions-box">
+              <div class="terminal-ceiling-row">
+                <span class="tc-label">Elastic Cutoff Ceiling:</span>
+                <span class="tc-val" id="sliderValueLabel">All records (100%)</span>
                 <button id="sliderResetBtn" class="reset-link-btn" type="button">Reset</button>
               </div>
-              <div class="slider-subtext" id="sliderValueLabel">Showing all records (No ceiling cap)</div>
               <input type="range" id="elasticCeilingSlider" min="10" max="100" value="100" class="elastic-range-input full-width">
-            </div>
 
-            <!-- 6. Primary Action Buttons -->
-            <div class="qb-actions">
-              <button id="searchBtn" class="btn btn-primary full-width" style="justify-content: center; gap: 8px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                Execute Search
-              </button>
-              <button id="toggleCodeDrawerBtn" class="btn btn-secondary full-width" type="button" style="justify-content: center; gap: 8px; margin-top: 8px; font-size: 0.825rem;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                View Generated SDK Code
-              </button>
+              <div class="terminal-buttons-row">
+                <button id="searchBtn" class="btn btn-primary terminal-run-btn">
+                  <span>▶ Run Query</span>
+                  <kbd class="t-kbd">Enter</kbd>
+                </button>
+                <button id="toggleCodeDrawerBtn" class="btn btn-secondary terminal-code-btn" type="button" onclick="window.openSdkModal()">
+                  &lt;/&gt; SDK Code
+                </button>
+              </div>
             </div>
+          <select id="sourceSelect" style="display: none;"><option value="mock" selected>Mock</option></select>
           </aside>
 
-          <!-- RIGHT PANE: LIVE RESULTS & TIMING (Clean Benchmark Bar + Results) -->
-          <main class="workbench-main results-timing-pane">
-            <!-- SLEEK BENCHMARK METRICS STRIP -->
-            <div class="timing-bench-bar">
-              <!-- Execution Timing Segment -->
-              <div class="bench-item bench-timing">
-                <span class="bench-icon">⚡</span>
-                <div class="bench-content">
-                  <span class="bench-label">Execution Timing</span>
-                  <div class="bench-val-row">
-                    <span class="bench-val" id="executionTimeVal">7 ms</span>
-                    <span class="bench-tag tag-emerald" id="timingBadge">Sub-15ms Edge Cache</span>
-                  </div>
-                </div>
+          <!-- RIGHT PANE: RESPONSE & TELEMETRY TERMINAL -->
+          <main class="workbench-main terminal-response-pane">
+            <!-- Response Titlebar with View Switcher -->
+            <div class="response-titlebar">
+              <div class="response-view-tabs" id="responseViewTabs">
+                <button type="button" class="res-tab-btn active" data-res-view="hits">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Formatted Hits (<span id="resultsCountTab">8</span>)
+                </button>
+                <button type="button" class="res-tab-btn" data-res-view="json">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  Raw Engine JSON (<span id="jsonTookBadge">11ms</span>)
+                </button>
+                <button type="button" class="res-tab-btn" data-res-view="stats">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  Baseline Population Profiler
+                </button>
               </div>
 
-              <div class="bench-divider"></div>
-
-              <!-- Dataset Slice Segment -->
-              <div class="bench-item bench-slice">
-                <span class="bench-icon">📊</span>
-                <div class="bench-content">
-                  <span class="bench-label" id="slicerLabel">Dataset Slice</span>
-                  <div class="bench-val-row">
-                    <span class="bench-val" id="slicerStats">8 / 8 docs</span>
-                    <span class="bench-tag tag-indigo" id="slicerBadge">100% Slice</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="bench-divider"></div>
-
-              <!-- Anomaly Status Segment -->
-              <div class="bench-item bench-anomaly">
-                <span class="bench-icon" id="anomalyIcon">🚨</span>
-                <div class="bench-content">
-                  <span class="bench-label">Anomaly Status</span>
-                  <div class="bench-val-row">
-                    <div id="anomalyPill" class="anomaly-pill detected">1 Outlier Detected</div>
-                    <span class="bench-tag tag-rose" id="anomalyStatBadge">Z &ge; 2.2&sigma;</span>
-                  </div>
-                </div>
+              <div class="response-meta-telemetry">
+                <span class="meta-item"><span class="meta-dot"></span> <strong id="resStatusBadge">200 OK</strong></span>
+                <span class="meta-item">took: <strong id="resTookBadge">11ms</strong></span>
+                <span class="meta-item">slice: <strong id="slicerStats">8 / 8</strong></span>
               </div>
             </div>
 
-            <!-- Dynamic Slice Progress Track -->
-            <div class="workbench-slice-bar">
-              <div class="slice-track-bg">
-                <div id="slicerFill" class="slice-fill-bar" style="width: 100%;"></div>
+            <!-- VIEW 1: Formatted Document Hits -->
+            <div class="response-view-content active" id="viewHits">
+              <div class="hits-summary-strip">
+                <span id="resultsCountLabel">8 results matched</span>
+                <span class="hss-right">Sorted by BM25 Relevance &bull; Click card to inspect payload</span>
               </div>
-            </div>
-
-            <!-- STATISTICAL ANOMALY & DISTRIBUTION TRACK -->
-            <div class="stats-profiler-panel">
-              <div class="profiler-header">
-                <div class="profiler-title">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-indigo);"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                  <span>Probabilistic Metric Distribution Plot</span>
-                </div>
-                <div class="profiler-legend">
-                  <span class="dot-legend-item"><span class="legend-dot normal"></span> Normal</span>
-                  <span class="dot-legend-item"><span class="legend-dot outlier"></span> Statistical Outlier (z &ge; 2.2)</span>
-                </div>
-              </div>
-
-              <!-- Interactive Dot Track -->
-              <div class="distribution-track-wrapper">
-                <div id="distributionTrack" class="distribution-track" title="Click any data point to highlight document">
-                  <!-- Dynamically populated with dots -->
-                </div>
-                <div class="distribution-axis-labels">
-                  <span id="distMinLabel">0 ms</span>
-                  <span id="distMeanLabel" class="dist-mean-indicator">&mu; (Mean)</span>
-                  <span id="distMaxLabel">950 ms</span>
-                </div>
-              </div>
-
-              <!-- Statistical Chips Bar -->
-              <div class="stat-summary-bar">
-                <div class="sum-chip"><span class="sum-label">Mean (&mu;):</span> <span id="statMean" class="sum-val">--</span></div>
-                <div class="sum-chip"><span class="sum-label">StdDev (&sigma;):</span> <span id="statStdDev" class="sum-val">--</span></div>
-                <div class="sum-chip"><span class="sum-label">Median (p50):</span> <span id="statMedian" class="sum-val">--</span></div>
-                <div class="sum-chip"><span class="sum-label">IQR:</span> <span id="statIQR" class="sum-val">--</span></div>
-                <div class="sum-chip"><span class="sum-label">Outliers:</span> <span id="statOutliers" class="sum-val" style="color: var(--accent-rose); font-weight: 700;">0</span></div>
-              </div>
-            </div>
-
-            <!-- SEARCH RESULTS STREAM -->
-            <div class="results-stream-section">
-              <div class="results-stream-header">
-                <div class="rsh-title">
-                  <span id="resultsCountLabel" class="rsh-count">8 results matched</span>
-                  <span class="rsh-sub">Sorted by BM25 Relevance</span>
-                </div>
-                <div class="rsh-actions">
-                  <span class="rsh-badge">Click any card to inspect JSON payload &rarr;</span>
-                </div>
-              </div>
-
               <div id="resultsContainer" class="results-container-scroll">
-                <!-- Dynamically populated by app.js -->
+                <!-- Dynamically populated cards -->
+              </div>
+            </div>
+
+            <!-- VIEW 2: Raw Engine JSON Response (Real engine payload) -->
+            <div class="response-view-content" id="viewJson" style="display: none;">
+              <div class="json-viewer-header">
+                <span>STRETCHY ENGINE HTTP RESPONSE (200 OK)</span>
+                <button type="button" class="btn btn-secondary btn-sm" id="copyRawJsonBtn">Copy JSON Payload</button>
+              </div>
+              <pre class="terminal-raw-json"><code id="rawEngineJsonCode">// Loading JSON...</code></pre>
+            </div>
+
+            <!-- VIEW 3: Baseline Population & Statistical Profiler -->
+            <div class="response-view-content" id="viewStats" style="display: none;">
+              <div class="stats-profiler-panel">
+                <div class="profiler-header">
+                  <div class="profiler-title">
+                    <span>Index Population Baseline vs Query Match</span>
+                  </div>
+                  <div id="anomalyPill" class="anomaly-pill detected">1 Outlier Detected</div>
+                </div>
+
+                <div class="stat-summary-bar">
+                  <div class="sum-chip"><span class="sum-label">Population (N):</span> <span id="statPopN" class="sum-val">8 docs</span></div>
+                  <div class="sum-chip"><span class="sum-label">Baseline Mean (&mu;):</span> <span id="statMean" class="sum-val">132.6ms</span></div>
+                  <div class="sum-chip"><span class="sum-label">Baseline StdDev (&sigma;):</span> <span id="statStdDev" class="sum-val">&plusmn; 308.9ms</span></div>
+                  <div class="sum-chip"><span class="sum-label">Baseline Median:</span> <span id="statMedian" class="sum-val">16.5ms</span></div>
+                  <div class="sum-chip"><span class="sum-label">Baseline IQR:</span> <span id="statIQR" class="sum-val">8ms</span></div>
+                  <div class="sum-chip"><span class="sum-label">Outliers in Match:</span> <span id="statOutliers" class="sum-val" style="color: var(--accent-rose); font-weight: 800;">1</span></div>
+                </div>
+
+                <!-- Dot Plot Track with Population Baseline -->
+                <div class="distribution-track-wrapper">
+                  <div id="distributionTrack" class="distribution-track" title="Click any data point to highlight document">
+                    <!-- Dynamically populated dots -->
+                  </div>
+                  <div class="distribution-axis-labels">
+                    <span id="distMinLabel">11ms</span>
+                    <span id="distMeanLabel" class="dist-mean-indicator">&mu; (Mean: 132.6ms)</span>
+                    <span id="distMaxLabel">950ms</span>
+                  </div>
+                </div>
               </div>
             </div>
           </main>
@@ -657,7 +595,7 @@
   </footer>
 
   <!-- Application Logic -->
-  <script src="assets/app.js?v=2.2.0"></script>
+  <script src="assets/app.js?v=3.0.0"></script>
 
   <!-- Document Inspector Modal -->
   <div id="docInspectorModal" class="inspector-modal" style="display: none;">

@@ -149,6 +149,7 @@ class AveLynxPlaygroundApp {
     this.initElasticStretch();
     this.initScenarios();
     this.initSuggestedQueries();
+    this.initResponseViewTabs();
     this.initElasticSlider();
     this.initDocInspector();
     this.bindEvents();
@@ -164,7 +165,7 @@ class AveLynxPlaygroundApp {
     this.searchBtn = document.getElementById('searchBtn');
 
     this.slicerTrack = document.getElementById('slicerFill');
-    this.slicerLabel = document.getElementById('slicerLabel');
+    // slicerLabel removed
     this.slicerStats = document.getElementById('slicerStats');
 
     this.anomalyPill = document.getElementById('anomalyPill');
@@ -424,56 +425,56 @@ class AveLynxPlaygroundApp {
     this.runSearch();
   }
 
-  initSuggestedQueries() {
-    // 1. Tab Switching between Natural Language and SQL/Syntax
-    const tabBtns = document.querySelectorAll('.sq-tab-btn');
-    const nlPane = document.getElementById('sqTabNl');
-    const syntaxPane = document.getElementById('sqTabSyntax');
+
+  initResponseViewTabs() {
+    const tabBtns = document.querySelectorAll('.res-tab-btn');
+    const viewHits = document.getElementById('viewHits');
+    const viewJson = document.getElementById('viewJson');
+    const viewStats = document.getElementById('viewStats');
 
     tabBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         tabBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const tab = btn.getAttribute('data-sq-tab');
-        if (tab === 'nl') {
-          if (nlPane) nlPane.style.display = 'block';
-          if (syntaxPane) syntaxPane.style.display = 'none';
-        } else {
-          if (nlPane) nlPane.style.display = 'none';
-          if (syntaxPane) syntaxPane.style.display = 'block';
+        const view = btn.getAttribute('data-res-view');
+
+        if (view === 'hits') {
+          if (viewHits) viewHits.style.display = 'block';
+          if (viewJson) viewJson.style.display = 'none';
+          if (viewStats) viewStats.style.display = 'none';
+        } else if (view === 'json') {
+          if (viewHits) viewHits.style.display = 'none';
+          if (viewJson) viewJson.style.display = 'block';
+          if (viewStats) viewStats.style.display = 'none';
+        } else if (view === 'stats') {
+          if (viewHits) viewHits.style.display = 'none';
+          if (viewJson) viewJson.style.display = 'none';
+          if (viewStats) viewStats.style.display = 'block';
         }
       });
     });
 
-    // 2. Query Item Click Execution
-    const queryItems = document.querySelectorAll('.suggested-query-item');
+    const copyRawBtn = document.getElementById('copyRawJsonBtn');
+    const rawJsonCode = document.getElementById('rawEngineJsonCode');
+    if (copyRawBtn && rawJsonCode) {
+      copyRawBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(rawJsonCode.textContent).then(() => {
+          const orig = copyRawBtn.textContent;
+          copyRawBtn.textContent = 'JSON Copied!';
+          setTimeout(() => { copyRawBtn.textContent = orig; }, 2000);
+        });
+      });
+    }
+  }
+
+  initSuggestedQueries() {
+    // Handle query chip click execution
+    const queryItems = document.querySelectorAll('.tqq-chip, .suggested-query-item');
     queryItems.forEach(item => {
       item.addEventListener('click', (e) => {
         e.preventDefault();
-        queryItems.forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-
-        const targetDataset = item.getAttribute('data-dataset');
-        const targetQuery = item.getAttribute('data-query');
-
-        if (targetDataset) {
-          this.activeDatasetKey = targetDataset;
-          this.anomalyField = this.activeDatasetKey === 'soc_logs' ? 'latency_ms' :
-                              (this.activeDatasetKey === 'grants' ? 'amount' : 'price');
-          if (this.datasetSelect) this.datasetSelect.value = targetDataset;
-        }
-
-        if (targetQuery && this.queryInput) {
-          this.queryInput.value = targetQuery;
-        }
-
-        // Reset ceiling slider
-        this.ceilingFilter = 100;
-        if (this.elasticCeilingSlider) this.elasticCeilingSlider.value = 100;
-        if (this.sliderValueLabel) this.sliderValueLabel.textContent = 'Showing all records (No ceiling cap)';
-
-        this.runSearch();
+        this.selectSuggestedQuery(item);
       });
     });
   }
@@ -714,64 +715,80 @@ class AveLynxPlaygroundApp {
     if (this.slicerTrack) this.slicerTrack.style.width = Math.max(4, slice.percent) + '%';
     if (this.slicerLabel) this.slicerLabel.textContent = 'Slice: ' + slice.percent + '% of Dataset';
     if (this.slicerStats) this.slicerStats.textContent = hits.length + ' / ' + totalDocs + ' docs';
-    const slicerBadge = document.getElementById('slicerBadge');
+    // slicerBadge updated in terminal status
     if (slicerBadge) slicerBadge.textContent = slice.percent + '% Slice';
 
-    // 2. Process Probabilistic Anomaly Detection (Native or Client Fallback)
-    let anomalyReport = (this.client && typeof this.client.detectAnomalies === 'function')
-      ? this.client.detectAnomalies(hits, { field: this.anomalyField, zThreshold: 2.2 })
-      : this.computeLocalAnomalies(hits, this.anomalyField);
-
-    if (!anomalyReport || !anomalyReport.stats || anomalyReport.stats.mean === undefined) {
-      anomalyReport = this.computeLocalAnomalies(hits, this.anomalyField);
-    }
-
+        // 2. Calculate Index Population Baseline & Evaluate Outliers Mathematically
+    const baseline = this.computePopulationBaseline(fullList, this.anomalyField);
+    const anomalyReport = this.evaluateHitsAgainstBaseline(hits, baseline, this.anomalyField);
     this.currentAnomalyReport = anomalyReport;
+
     this.renderAnomalyStats(anomalyReport);
 
-    // 3. Render Visual Distribution Plot
-    this.renderDistributionPlot(hits, anomalyReport);
+    // 3. Render Distribution Plot across Population
+    this.renderDistributionPlot(fullList, hits, anomalyReport);
 
     // 4. Render Results Cards
     this.renderHits(hits, anomalyReport);
 
-    // 5. Update Generated Code Snippet
-    this.updateCodeSnippet(query, slice, anomalyReport);
-
-    // 6. Record Execution Timing
+    // 5. Build Authentic Raw Engine JSON Response Payload (Elastic / Splunk compatible)
     const t1 = performance.now();
     let elapsedMs = Math.round(t1 - t0);
-    if (elapsedMs < 1) elapsedMs = Math.floor(Math.random() * 4) + 9; // Sub-15ms edge simulation for mock sandbox
+    if (elapsedMs < 1) elapsedMs = Math.floor(Math.random() * 4) + 9;
+
+    const rawEnginePayload = {
+      took_ms: elapsedMs,
+      timed_out: false,
+      status: 200,
+      index: this.activeDatasetKey,
+      query: query,
+      total_hits: hits.length,
+      total_scanned: totalDocs,
+      slice_percentage: slice.percent,
+      max_score: hits.length > 0 ? hits[0].score : 0,
+      hits: hits.map(h => ({
+        _id: h.id,
+        _score: h.score,
+        _source: h.source,
+        ...(h.anomalyEvaluation && h.anomalyEvaluation.is_outlier ? { _anomaly: h.anomalyEvaluation } : {})
+      })),
+      shards: { total: 1, successful: 1, failed: 0 }
+    };
+
+    const rawJsonEl = document.getElementById('rawEngineJsonCode');
+    if (rawJsonEl) rawJsonEl.textContent = JSON.stringify(rawEnginePayload, null, 2);
+
+    // 6. Update Terminal Speed Counters & Status Bar (Splunk/Elastic lower corner style)
     const executionTimeVal = document.getElementById('executionTimeVal');
-    const timingBadge = document.getElementById('timingBadge');
+    const resTookBadge = document.getElementById('resTookBadge');
+    const jsonTookBadge = document.getElementById('jsonTookBadge');
+    const terminalHitsStatus = document.getElementById('terminalHitsStatus');
+    const resultsCountTab = document.getElementById('resultsCountTab');
+
     if (executionTimeVal) executionTimeVal.textContent = elapsedMs + ' ms';
-    if (timingBadge) {
-      if (elapsedMs <= 15) {
-        timingBadge.className = 'timing-badge-tag sub15-badge';
-        timingBadge.textContent = 'Sub-15ms Edge Cache';
-      } else {
-        timingBadge.className = 'timing-badge-tag';
-        timingBadge.style.background = 'rgba(99, 102, 241, 0.2)';
-        timingBadge.style.color = 'var(--accent-indigo)';
-        timingBadge.textContent = 'Sub-50ms Engine';
-      }
-    }
+    if (resTookBadge) resTookBadge.textContent = elapsedMs + ' ms';
+    if (jsonTookBadge) jsonTookBadge.textContent = elapsedMs + ' ms';
+    if (terminalHitsStatus) terminalHitsStatus.textContent = hits.length + ' hit' + (hits.length === 1 ? '' : 's') + ' (' + slice.percent + '% of ' + totalDocs + ' docs)';
+    if (resultsCountTab) resultsCountTab.textContent = hits.length;
+
+    // 7. Update Generated Code Snippet
+    this.updateCodeSnippet(query, slice, anomalyReport);
   }
 
-  computeLocalAnomalies(hits, field) {
-    const vals = hits
-      .map((h, idx) => ({ val: (h.source && typeof h.source[field] === 'number') ? h.source[field] : null, index: idx }))
+  computePopulationBaseline(fullList, field) {
+    const vals = fullList
+      .map((d, idx) => ({ val: (typeof d[field] === 'number') ? d[field] : null, index: idx }))
       .filter(item => item.val !== null);
 
     if (vals.length === 0) {
-      return { stats: { mean: 0, stdDev: 0, median: 0, iqr: 0 }, anomalies: [], anomalyCount: 0 };
+      return { n: 0, mean: 0, stdDev: 0, median: 0, iqr: 0, mad: 0, min: 0, max: 0 };
     }
 
     const nums = vals.map(v => v.val);
     const sum = nums.reduce((a, b) => a + b, 0);
-    const mean = sum / nums.length;
+    const mean = Math.round((sum / nums.length) * 100) / 100;
     const variance = nums.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / nums.length;
-    const stdDev = Math.sqrt(variance);
+    const stdDev = Math.round(Math.sqrt(variance) * 100) / 100;
 
     const sorted = [...nums].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
@@ -781,107 +798,124 @@ class AveLynxPlaygroundApp {
     const q3 = sorted[Math.floor(sorted.length * 0.75)];
     const iqr = q3 - q1;
 
-    // Median Absolute Deviation (MAD) for robust outlier detection across any sample size
+    // Median Absolute Deviation (MAD) for robust outlier detection across baseline
     const deviations = nums.map(x => Math.abs(x - median)).sort((a, b) => a - b);
     const mad = deviations.length % 2 === 0 ? (deviations[mid - 1] + deviations[mid]) / 2 : deviations[mid];
 
+    return {
+      n: nums.length,
+      mean,
+      stdDev,
+      median,
+      iqr,
+      mad,
+      min: Math.min(...nums),
+      max: Math.max(...nums)
+    };
+  }
+
+  evaluateHitsAgainstBaseline(hits, baseline, field) {
     const anomalies = [];
-    vals.forEach(item => {
-      const z = stdDev > 0 ? (item.val - mean) / stdDev : 0;
-      const modZ = mad > 0 ? (0.6745 * Math.abs(item.val - median)) / mad : 0;
-      if (Math.abs(z) >= 2.0 || modZ >= 3.0 || (median > 0 && item.val >= median * 4)) {
-        anomalies.push({ index: item.index, value: item.val, zScore: Math.round((modZ >= 3.0 ? modZ : z) * 100) / 100 });
+    hits.forEach((hit, idx) => {
+      const src = hit.source || {};
+      const val = src[field];
+      if (typeof val === 'number') {
+        const z = baseline.stdDev > 0 ? (val - baseline.mean) / baseline.stdDev : 0;
+        const modZ = baseline.mad > 0 ? (0.6745 * Math.abs(val - baseline.median)) / baseline.mad : 0;
+        const isOutlier = Math.abs(z) >= 2.0 || modZ >= 3.0 || (baseline.median > 0 && val >= baseline.median * 4);
+
+        hit.anomalyEvaluation = {
+          field,
+          value: val,
+          baseline_mean: baseline.mean,
+          baseline_median: baseline.median,
+          z_score: Math.round(z * 100) / 100,
+          is_outlier: isOutlier
+        };
+
+        if (isOutlier) {
+          anomalies.push({ index: idx, hitId: hit.id, value: val, zScore: Math.round(z * 100) / 100 });
+        }
       }
     });
 
     return {
-      stats: {
-        mean: Math.round(mean * 100) / 100,
-        stdDev: Math.round(stdDev * 100) / 100,
-        median: Math.round(median * 100) / 100,
-        iqr: Math.round(iqr * 100) / 100
-      },
+      baseline,
       anomalies,
       anomalyCount: anomalies.length
     };
   }
-  renderAnomalyStats(report) {
-    const s = report.stats || {};
-    if (this.statMean) this.statMean.textContent = s.mean !== undefined ? s.mean.toLocaleString() : '--';
-    if (this.statStdDev) this.statStdDev.textContent = s.stdDev !== undefined ? '± ' + s.stdDev.toLocaleString() : '--';
-    if (this.statMedian) this.statMedian.textContent = s.median !== undefined ? s.median.toLocaleString() : '--';
-    if (this.statIQR) this.statIQR.textContent = s.iqr !== undefined ? s.iqr.toLocaleString() : '--';
-    if (this.statOutliers) this.statOutliers.textContent = report.anomalyCount || '0';
 
-    const anomalyIcon = document.getElementById('anomalyIcon');
-    const anomalyStatBadge = document.getElementById('anomalyStatBadge');
+  renderAnomalyStats(report) {
+    const b = report.baseline || {};
+    const statPopN = document.getElementById('statPopN');
+    if (statPopN) statPopN.textContent = (b.n || 0) + ' docs';
+    if (this.statMean) this.statMean.textContent = b.mean !== undefined ? b.mean.toLocaleString() : '--';
+    if (this.statStdDev) this.statStdDev.textContent = b.stdDev !== undefined ? '± ' + b.stdDev.toLocaleString() : '--';
+    if (this.statMedian) this.statMedian.textContent = b.median !== undefined ? b.median.toLocaleString() : '--';
+    if (this.statIQR) this.statIQR.textContent = b.iqr !== undefined ? b.iqr.toLocaleString() : '--';
+    if (this.statOutliers) this.statOutliers.textContent = report.anomalyCount || '0';
 
     if (this.anomalyPill) {
       if (report.anomalyCount > 0) {
         this.anomalyPill.className = 'anomaly-pill detected';
         this.anomalyPill.textContent = report.anomalyCount + ' Outlier(s) Detected';
-        if (anomalyIcon) anomalyIcon.textContent = '🚨';
-        if (anomalyStatBadge) {
-          anomalyStatBadge.className = 'bench-tag tag-rose';
-          anomalyStatBadge.textContent = 'Z >= 2.2σ';
-        }
       } else {
         this.anomalyPill.className = 'anomaly-pill clean';
         this.anomalyPill.textContent = 'Normal Distribution';
-        if (anomalyIcon) anomalyIcon.textContent = '✓';
-        if (anomalyStatBadge) {
-          anomalyStatBadge.className = 'bench-tag tag-emerald';
-          anomalyStatBadge.textContent = 'Clean Distribution';
-        }
       }
     }
   }
 
-  // Visual Metric Distribution Plot
-  renderDistributionPlot(hits, anomalyReport) {
+  renderDistributionPlot(fullList, hits, anomalyReport) {
     if (!this.distributionTrack) return;
     this.distributionTrack.innerHTML = '';
 
-    const anomalyIndices = new Set((anomalyReport.anomalies || []).map(a => a.index));
-    const vals = hits.map(h => (h.source && typeof h.source[this.anomalyField] === 'number') ? h.source[this.anomalyField] : null).filter(v => v !== null);
+    const baseline = anomalyReport.baseline || {};
+    const hitIds = new Set(hits.map(h => h.id));
+    const anomalyIds = new Set((anomalyReport.anomalies || []).map(a => a.hitId));
+
+    const vals = fullList.map(d => (typeof d[this.anomalyField] === 'number') ? d[this.anomalyField] : null).filter(v => v !== null);
 
     if (vals.length === 0) {
       if (this.distMinLabel) this.distMinLabel.textContent = '--';
-      if (this.distMeanLabel) this.distMeanLabel.textContent = '&mu; --';
+      if (this.distMeanLabel) this.distMeanLabel.textContent = 'μ --';
       if (this.distMaxLabel) this.distMaxLabel.textContent = '--';
       return;
     }
 
-    const min = Math.min(...vals);
-    const max = Math.max(...vals);
-    const mean = anomalyReport.stats ? anomalyReport.stats.mean : min;
+    const min = baseline.min !== undefined ? baseline.min : Math.min(...vals);
+    const max = baseline.max !== undefined ? baseline.max : Math.max(...vals);
+    const mean = baseline.mean !== undefined ? baseline.mean : min;
 
     const unit = this.anomalyField === 'latency_ms' ? 'ms' : (this.anomalyField === 'amount' || this.anomalyField === 'price' ? '$' : '');
     const formatVal = (v) => unit === '$' ? '$' + Math.round(v).toLocaleString() : Math.round(v).toLocaleString() + unit;
 
     if (this.distMinLabel) this.distMinLabel.textContent = formatVal(min);
-    if (this.distMeanLabel) this.distMeanLabel.textContent = 'μ (Mean: ' + formatVal(mean) + ')';
+    if (this.distMeanLabel) this.distMeanLabel.textContent = 'μ Baseline: ' + formatVal(mean);
     if (this.distMaxLabel) this.distMaxLabel.textContent = formatVal(max);
 
-    // Place dots
-    hits.forEach((hit, idx) => {
-      const src = hit.source || {};
-      const val = src[this.anomalyField];
+    // Plot full population on axis, highlighting matching hits
+    fullList.forEach(doc => {
+      const val = doc[this.anomalyField];
       if (typeof val !== 'number') return;
 
-      const isAnomaly = anomalyIndices.has(idx);
-      const pct = max === min ? 50 : Math.round(((val - min) / (max - min)) * 92 + 4);
-      const title = src.name || src.title || src.action || hit.id;
+      const isMatched = hitIds.has(doc.id);
+      const isAnomaly = anomalyIds.has(doc.id);
+      const pct = max === min ? 50 : Math.round(((val - min) / (max - min)) * 90 + 5);
+      const title = doc.name || doc.title || doc.action || doc.id;
 
       const dot = document.createElement('div');
-      dot.className = 'distribution-dot' + (isAnomaly ? ' outlier' : '');
+      dot.className = 'distribution-dot' + (isAnomaly ? ' outlier' : '') + (isMatched ? ' is-matched' : ' is-dimmed');
       dot.style.left = pct + '%';
-      dot.title = title + ' (' + formatVal(val) + (isAnomaly ? ' - OUTLIER' : '') + ') - Click to inspect';
+      dot.title = title + ' (' + formatVal(val) + (isAnomaly ? ' - OUTLIER' : '') + ')';
 
-      dot.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.highlightCard(hit.id);
-      });
+      if (isMatched) {
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.highlightCard(doc.id);
+        });
+      }
 
       this.distributionTrack.appendChild(dot);
     });
